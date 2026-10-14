@@ -50,3 +50,11 @@ Append-only. Newest last.
 - Posted three learning-mode verdict comments (IsImageUrlDotNet#15, #16, #17), checked sticky on a second dry run.
 - Lessons L-004 to L-008 in the skill's LEARNINGS.md; recipe in references/prs.md.
 - Open for Mark: new transitive packages from the same publisher (Microsoft.TestPlatform.AdapterUtilities with NUnit3TestAdapter) always escalate; keep that, or allow a same-owner transitive on a patch bump? Not changed without his say.
+
+## 2026-10-14: the maintainer's rulings after the IsImageUrlDotNet run
+
+- PR #3 merged (squash) after green checks.
+- Mark: "ok, 1 more learning mode run": one more learning-only single-repo run, then learning mode goes off and Phase 4 begins. Picked seeded-random-utilities (npm, never run alone; an open Dependabot alert, low severity in a development dependency, so the vulnerability duty meets a real alert; one Dependabot group PR; clean clone).
+- Mark on new transitive packages: escalate "only if it seems dangerous". Recorded as D14 in plans/design.md; not built yet (the next session builds it, with tests, before the run).
+- Mark: the everlast secret-scanning alert was a false alarm, resolved as used in tests. everkeep queries open alerts only, so no code change.
+
