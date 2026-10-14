@@ -28,3 +28,15 @@ Append-only. Newest last.
 - Private overlay written to the vault sidecar (`projects/everkeep/private/overlay`, D10) and junctioned to `~/.everkeep/overlay`: escalation account, private repos in `--all`, learning mode on, high-risk list, starter selections, clone roots, registry accounts.
 - Registered in evergreen, added to the mark-local marketplace, installed as `everkeep@mark-local`.
 - Before publishing: scrubbed private repo names and local paths from the docs, code and research notes; the session prompt `ai-docs/next-session-prompt.md` is gitignored (local paths) with a copy in the private sidecar.
+
+## 2026-10-13: Phase 3 dry runs (no --apply) and the public repository
+
+- Public repository m4bwav/everkeep created from a squashed first commit (private names and local paths removed first; history checked clean). Topics set; `keep.py enable all --repo everkeep --apply` switched on Dependabot alerts and security updates, private vulnerability reporting, CodeQL default setup and the open-PR cap, read back as on. CI green on all six suite jobs and the budget job.
+- PR #1 added `keep.py enable` (the gaps table named the D11 fix but no command did it); PR #2 carried the dry-run fixes. Both merged by the author rule after green checks. everkeep classified its own PR #1 as `own` and left it alone.
+- Dry run 1, this repo, every duty: one gap (ruleset, ask first).
+- Dry run 2, replace-string-at-position, CachingServiceWithAOPSupport, readwright: 3 would merge, 1 needs a fix (the NuGet lockfile PR), real gaps; npm audit's 10 findings were all dev-only (L-003).
+- Dry run 3, `run start --all` (60 repos: private in, forks and archived out per D4), interrupted after 8 with `EVERKEEP_INTERRUPT_AFTER=8` (exit 130, 8 done, 52 pending), resumed to 59 done and 1 failed; the failure (gh refusing a raw file with terminal escapes) was fixed and `run resume --failed` finished it: 60 done.
+- Hand check: all 19 open PRs match the live snapshot's expected calls (13 would merge, 6 need a fix); five verified independently from GitHub (files and check conclusions of format-json-files#10, is-an-image-url#32, seeded-random-utilities#26, IsImageUrlDotNet#17, UniverseGenerator#61).
+- Findings for the maintainer: an open secret-scanning alert (Google API key, since 2026-09-27, validity unknown) on a public plugin repo; five Dependabot alerts, all in development dependencies; 63 npm audit findings across 7 npm repos, all dev-only; CONTRIBUTING.md with an AI policy missing in 59 repos, no dependency-bot cooldown in 45, CodeQL default setup and the PR cap off in 39 public repos. Deadlines: one private repo still tests Node 20; one private Unity repo has a net8/9 test project (2026-11-10).
+- The all-repo digest is in the maintainer's state folder (`runs/20261014-030304-ehtv/digest.md`), not in this repository (it names private repos).
+- Package at 3,937 lines (green line 4,000); installed size 579 KB (yellow).
