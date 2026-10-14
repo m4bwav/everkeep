@@ -160,6 +160,7 @@ class Alert(_Dict):
     url: str = ""
     state: str = "open"  # open, withdrawn
     fixed_in: str = ""
+    scope: str = ""  # dependency alerts: runtime or development
 
 
 @dataclass

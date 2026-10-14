@@ -62,6 +62,11 @@ class Seam(EnvCase):
         self.assertIn("2026-11-02", out)  # pull_request_target deadline
         self.assertIn("2026-11-01", out)  # NuGet key deadline
         self.assertIn("2026-11-10", out)  # net8.0
+        code, out, err = keep("gaps", "--repo", "owner/npm-lib")
+        self.assertEqual(code, 0, err)
+        # npm stage publish is trusted publishing; a tarball script holding a budget is a size gate (2026-10-14)
+        self.assertIn("| trusted publishing | ok |", out)
+        self.assertIn("| size-budget gate | ok |", out)
 
     def test_run_and_digest_through_the_fake_adapter(self):
         code, out, err = keep("run", "start", "--all", "--duties", "prs,gaps")

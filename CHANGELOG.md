@@ -5,6 +5,9 @@ Plugin versions. Reasoned changes to the skill are in `skills/everkeep/CHANGELOG
 ## Unreleased
 
 - A lockfile adding a package no longer escalates on its own (decision D14): it escalates only when the new package shares no owner with the packages the same update moves, was first published under 90 days ago, is missing from its registry, has a name one edit from a popular or bumped package, or is a known-compromised version. Otherwise the verdict comment names it as a reason.
+- `deps` holds only the update types a dependabot.yml ignore names (majors only, say), not the whole package.
+- `gaps` recognises staged npm publishing (`npm stage publish`) and a size budget enforced by a tarball or size script.
+- `vulns` shows each Dependabot alert's scope (runtime or development).
 - Removed the unused provider methods `open_pr` and `rate_state`.
 - `keep.py enable`: switch on the security settings the maintainer allows without asking (D11), dry run unless `--apply`.
 - `act` without `--apply` writes the comments it would post, word for word, beside the plan (`<plan>.comments.md`).

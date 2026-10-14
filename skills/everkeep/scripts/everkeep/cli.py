@@ -137,7 +137,8 @@ def cmd_vulns(args, store):
     def render(v):
         lines = [f"## {v['repo']}", ""]
         for kind, items in v["alerts"].items():
-            lines.append(f"- {kind} alerts: {len(items)}" + "".join(f"\n  - {a['severity']} {a['package']} {a['summary'][:80]} {a['url']}" for a in items[:10]))
+            lines.append(f"- {kind} alerts: {len(items)}" + "".join(f"\n  - {a['severity']} {a['package']}" + (f" ({a['scope']})" if a.get("scope") else "")
+                                                                    + f" {a['summary'][:80]} {a['url']}" for a in items[:10]))
         lines += [f"- {s['tool']}: {s['status']}, {s.get('findings', '?')} finding(s) {s.get('detail', '')}" for s in v["scanners"]]
         lines += [f"- not checked: {x}" for x in v["not_checked"]]
         return "\n".join(lines)

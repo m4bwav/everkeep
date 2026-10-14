@@ -117,7 +117,7 @@ def audit(entry: dict, store, deep: bool = False) -> dict:
     rs = s.get("rulesets")
     row("ruleset on the default branch", "ok" if rs else "gap" if rs == 0 else "unknown", "", "ask first (D11)")
     if packages:
-        pub = [w for w, t in wf_text.items() if re.search(r"npm publish|nuget push|dotnet nuget push|pypa/gh-action-pypi-publish|twine upload", t)]
+        pub = [w for w, t in wf_text.items() if re.search(r"npm (?:stage )?publish|nuget push|dotnet nuget push|pypa/gh-action-pypi-publish|twine upload", t)]
         if not pub:
             row("trusted publishing", "unknown", "no publish workflow found", "package-modernize")
         else:
@@ -125,12 +125,13 @@ def audit(entry: dict, store, deep: bool = False) -> dict:
             row("trusted publishing", "gap" if tokens else "ok", ", ".join(tokens), "package-modernize")
             if any("nuget push" in wf_text[w] for w in tokens):
                 deadlines.append(("nuget_key", ", ".join(tokens)))
-            if any("npm publish" in wf_text[w] for w in tokens):
+            if any(re.search(r"npm (?:stage )?publish", wf_text[w]) for w in tokens):
                 deadlines.append(("npm_token", ", ".join(tokens)))
         if public and caps.has("wiki"):
             w = p.wiki_exists(repo.id)
             row("wiki", "ok" if w else "gap" if w is False else "unknown", "", "wikiwright")
-        gate = bool(GATE_FILES & pset) or ("package.json" in pset and "size-limit" in _text(p, repo, "package.json"))
+        gate = bool(GATE_FILES & pset) or ("package.json" in pset and "size-limit" in _text(p, repo, "package.json")) or any(
+            re.search(r"budget", _text(p, repo, x), re.I) for x in paths if re.match(r"scripts/[^/]*(size|budget|tarball)[^/]*$", x))
         row("size-budget gate", "ok" if gate else "gap", "", "manual: thresholds with the maintainer")
         golden = any(re.search(r"(^|/)golden/|Golden", x) for x in paths)
         row("golden recording and gated release", "ok" if golden else "gap", "", "package-modernize kickoff")

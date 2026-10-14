@@ -369,7 +369,8 @@ class GitHubProvider(Provider):
                 out.append(Alert(kind=kind, id=str(a.get("number")), severity=adv.get("severity", ""),
                                  package=pkg.get("name", ""), ecosystem=pkg.get("ecosystem", ""),
                                  summary=adv.get("summary", ""), url=a.get("html_url", ""),
-                                 fixed_in=vuln.get("identifier", "") if isinstance(vuln, dict) else ""))
+                                 fixed_in=vuln.get("identifier", "") if isinstance(vuln, dict) else "",
+                                 scope=(a.get("dependency") or {}).get("scope") or ""))
             elif kind == "code":
                 rule = a.get("rule") or {}
                 out.append(Alert(kind=kind, id=str(a.get("number")), severity=rule.get("security_severity_level") or rule.get("severity", ""),

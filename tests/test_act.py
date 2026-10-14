@@ -140,6 +140,14 @@ class Deps(EnvCase):
         with mock.patch.object(R, "fetch_json", lambda url, timeout=20: reg[url]):
             self.assertEqual(D._nuget_latest("FSharp.Core"), ("10.0.112", "2026-09-09T00:00:00+00:00"))
 
+    def test_dependabot_ignore_of_majors_only_holds_majors(self):
+        # seeded-random-utilities, 2026-10-14: @types/node ignores semver-major only, yet deps held the whole package.
+        from everkeep import duties as D
+        text = ("updates:\n  - package-ecosystem: npm\n    ignore:\n      - dependency-name: '@types/node'\n"
+                "        update-types: ['version-update:semver-major']\n      - dependency-name: FSharp.Core\n"
+                "  - package-ecosystem: github-actions\n    directory: /\n")
+        self.assertEqual(D.dependabot_ignores(text), {"@types/node": {"major"}, "FSharp.Core": {"major", "minor", "patch"}})
+
 
 if __name__ == "__main__":
     unittest.main()
