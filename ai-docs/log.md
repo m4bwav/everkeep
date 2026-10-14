@@ -1,0 +1,30 @@
+# everkeep log
+
+Append-only. Newest last.
+
+## 2026-10-13: Phase 0 research and Phase 1 design (kickoff kept outside this repository, in the maintainer's private notes)
+
+- Name checked: `everkeep` free on GitHub (no m4bwav repo; five unrelated 0-star repos), npm (404), NuGet (0 hits) and every installed plugin. PyPI `everkeep` is reserved (0.0.0) by an unrelated storage product, everkeep.dev; not a blocker since everkeep publishes nowhere. `keepwright` is taken by leonardocandiani/keepwright, a Claude Code skill for repo quality: a worse collision. Kept everkeep.
+- Mark, mid-session: "This will be for a public repo with all the fixin's" (public `m4bwav/everkeep`, banner, icon, SECURITY.md, topics, wiki, CI, evals).
+- Mark, mid-session: "Eventually we will run this on all my repos to sharpen the tool with and encounter real life bullshit. As your learning maybe you warn me not to merge a dependency until x time or something and leave a comment on it." Became the sticky verdict comment and learning mode (design section 6, decision D13).
+- Live snapshot (`research/2026-10-13-live-account-snapshot.md`): 67 repos, 19 open PRs all Dependabot, 4 failing; 3 failures are one Dependabot NuGet bug that rewrites `packages.lock.json` and drops the `net48` and `win-x86` sections (CachingServiceWithAOPSupport#12, DotNetRandomNameGenerator#24, IsImageUrlDotNet#17). Six open PRs are first-party action pin bumps touching workflows (decision D7).
+- Four research agents wrote `research/2026-10-13-verification-and-recent-changes.md`, `-maintainer-bots-and-practice.md`, `-other-providers.md`, `-ecosystem-apis-scanners-eol.md`. The first agent stopped once without working and had to be resumed with a direct instruction; the forum agent was slow from Reddit RSS pacing and was told to wrap up after 20 minutes.
+- Corrections filed in the old landscape note: Yegge's post date, Ghostty's policy wording, Miasma provenance.
+- Wrote `plans/design.md` (decisions table D1 to D13), `../references/providers.md` (interface, GitHub matrix, rule mapping with other providers not built), `plans/providers-roadmap.md`.
+- Skill catalog measured with skill-tidy: 61 skills, about 12.3K tokens of descriptions against a 2K-character Claude Code listing budget, hence one listed skill (D8).
+- Stopped at the Phase 1 stop: decisions table to Mark.
+- Mark's answers (structured question, 2026-10-13): D4 "Private in, forks out (Recommended)", D6 "RNG + JsonPrettyPrinter (Recommended)", D7 "Merge pin-only first-party (Recommended)", D2 "Weekly, after rollout (Recommended)". The other rows stand as recommended. Design approved; Phase 2 build is next, from `next-session-prompt.md`.
+
+## 2026-10-13: Phase 2 build
+
+- `git init` (master), everlast-setup (mode repo, sync push). `references/providers.md` moved to `skills/everkeep/references/`.
+- Built the CLI inside the skill folder (`skills/everkeep/scripts/keep.py` and `scripts/everkeep/`, about 3,900 lines, stdlib only) so the skill travels whole; `scripts/size_check.py` stays at the root. Recorded in design section 4.
+- Classes as designed plus one addition: `own` for PRs opened by the account everkeep runs as (other sessions' work), listed and left alone.
+- GitHub adapter checked against the live account: the 19 open Dependabot PRs classify as the snapshot expected (npm groups and FizzBuzzPlus#6 merge; the six first-party pin bumps merge under D7; the three NuGet lockfile PRs are `fix`, with the removed `net48`/`win-x86` sections and one new transitive package flagged). Async merge body (`sha`, `merge_method`, `merge_action`) confirmed in the REST docs.
+- Real-data fixes found while resolving the whole account: an unpublished npm name claimed by a private repo, an F# library missed (`.fsproj`), template and fixture folders read as ecosystems, a version parsed with Dependabot's trailing full stop, NuGet's two-digit fraction of a second (Python 3.10). Packages now count only when the registry has them and, with `registry_accounts` set, the user owns them. Filters gained `package=` and comma-as-any.
+- 80 unit tests pass on Python 3.10, 3.11 and 3.14 (Windows). The seam test puts a one-file git shim alone on PATH, because GitHub's Linux and macOS runners keep gh beside git in /usr/bin.
+- Skill written through evergreen-new (tier fast, next due 2026-10-27); worth UNPROVEN (nothing suspect, no A/B yet); skill-tidy: closest description 0.17; size budget green except the installed size, 569 KB (yellow, line 400 KB) because the Phase 0 research notes ship with the plugin.
+- Banner: Z-Image Turbo on the idle Mac (the PC was rendering another session's video), polywright's banner workflow, seed 44 of four. Icon: package-modernize's make-icon.py from origin/master (the local clone lacked `--size`), 512 master plus 128.
+- Private overlay written to the vault sidecar (`projects/everkeep/private/overlay`, D10) and junctioned to `~/.everkeep/overlay`: escalation account, private repos in `--all`, learning mode on, high-risk list, starter selections, clone roots, registry accounts.
+- Registered in evergreen, added to the mark-local marketplace, installed as `everkeep@mark-local`.
+- Before publishing: scrubbed private repo names and local paths from the docs, code and research notes; the session prompt `ai-docs/next-session-prompt.md` is gitignored (local paths) with a copy in the private sidecar.

@@ -1,0 +1,9 @@
+# Keeps the two workflow actions current. everkeep has no runtime dependencies to update.
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 7

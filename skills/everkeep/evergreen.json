@@ -1,0 +1,78 @@
+{
+  "evergreen": "1.0",
+  "name": "everkeep",
+  "kind": "skill",
+  "main": "SKILL.md",
+  "files": {
+    "research": "RESEARCH.md",
+    "changelog": "CHANGELOG.md",
+    "learnings": "LEARNINGS.md",
+    "tests": "TESTS.md"
+  },
+  "protocol": "plugin",
+  "source": null,
+  "topic": "Maintaining GitHub repositories and packages with an AI agent: PR triage of Dependabot/Renovate and human PRs, cooldowns and supply-chain signals (lockfile diffs, publisher changes, compromised versions), GitHub REST/gh behaviour (async merge, alerts, rulesets, PR caps, rate limits), vulnerability scanners (osv-scanner, npm audit, dotnet), toolchain EOL dates, AI-PR spam signals, other hosts (GitLab, Forgejo/Gitea, Bitbucket, Azure DevOps)",
+  "tier": "fast",
+  "interval_days": 14,
+  "last_checked": "2026-10-13",
+  "next_due": "2026-10-27",
+  "verify_at_use": false,
+  "volatile_claims": [
+    "GitHub async merge PUT /pulls/{n}/merge-async with sha, GA 2026-10-01 (docs read 2026-10-13)",
+    "Withdrawn Dependabot alerts answer 410 Gone since 2026-10-13",
+    "Dependabot's NuGet updater drops net48/win-x86 sections from packages.lock.json (seen 2026-10-13)",
+    "Toolchain floors: Node 22/24/26, .NET 10, Unity 6.3 LTS, node24 actions (2026-10-13)",
+    "claude -p lock-down flags in references/schedule.md (--setting-sources, disableAllHooks, --strict-mcp-config, --tools) unverified by a run"
+  ],
+  "contradiction": null,
+  "events": [
+    {
+      "date": "2026-11-01",
+      "settle_days": 3,
+      "note": "NuGet API keys created before 2026-08-17 expire; check the gap and deadline wording"
+    },
+    {
+      "date": "2026-11-02",
+      "settle_days": 3,
+      "note": "pull_request_target blocked by default on public repos without an event policy; confirm the rollout and update gaps.md"
+    },
+    {
+      "date": "2026-11-10",
+      "settle_days": 3,
+      "note": ".NET 8 and 9 end of support; move the deadline row to passed"
+    }
+  ],
+  "streak": {
+    "quiet": 0,
+    "pinned_min": 0,
+    "pinned_max": 0,
+    "vau_quiet": 0
+  },
+  "history": [
+    {
+      "date": "2026-10-13",
+      "m": null,
+      "interval_after": 14,
+      "note": "created"
+    }
+  ],
+  "counts": {
+    "learnings": 0,
+    "changes": 0,
+    "research": 0,
+    "tests": 0
+  },
+  "consolidate_every": 25,
+  "tests": {
+    "last_run": null,
+    "harness": null,
+    "env": null,
+    "cases": 0,
+    "passed": 0,
+    "failed": 0,
+    "failing": [],
+    "last_failure": null,
+    "research_after_days": null
+  },
+  "version": "0.1.0"
+}

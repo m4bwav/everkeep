@@ -1,0 +1,9 @@
+{
+  "name": "everkeep",
+  "version": "0.1.0",
+  "description": "Keep the repositories and packages you already own healthy: one repo by default, a saved selection, or the whole account. Triages pull requests (merges safe bot bumps past a cooldown, fixes failing ones, closes spam, escalates the rest), checks vulnerabilities, outdated dependencies and toolchains, modernization gaps and knowledge bases, and ends each run with one digest. A standard-library Python CLI gathers the facts and acts only with --apply, with every guard re-checked at the moment of acting. GitHub only for now, behind a provider interface. Evergreen.",
+  "author": "Mark Rogers",
+  "license": "MIT",
+  "skills": "./skills",
+  "repository": "https://github.com/m4bwav/everkeep"
+}

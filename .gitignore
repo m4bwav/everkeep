@@ -1,0 +1,14 @@
+__pycache__/
+*.pyc
+.pytest_cache/
+*.plugin
+dist/
+.DS_Store
+.obsidian/workspace.json
+.obsidian/workspace-mobile.json
+.obsidian/cache
+evals/results/
+fixture/
+
+# Session handoff prompt: holds local paths, so it stays on this machine (copy in the private sidecar)
+ai-docs/next-session-prompt.md
