@@ -18,6 +18,10 @@ REPO_FIELDS = "name,nameWithOwner,isFork,isArchived,visibility,pushedAt,reposito
 PR_FIELDS = "number,title,author,isDraft,headRefOid,headRefName,baseRefName,labels,createdAt,url"
 
 
+_ESC = chr(27)
+_ESCAPES = re.compile(_ESC + r"\[[0-9;?]*[ -/]*[@-~]|" + _ESC + r"\][^" + chr(7) + "]*" + chr(7) + "?|" + _ESC + ".")
+
+
 class NotFound(EverkeepError):
     pass
 
@@ -158,9 +162,16 @@ class GitHubProvider(Provider):
             args += ["--jq", jq]
         if body is not None:
             args += ["--input", "-"]
-        out = self._gh(args, input_text=json.dumps(body) if body is not None else None, write=method != "GET")
+        payload = json.dumps(body) if body is not None else None
+        try:
+            out = self._gh(args, input_text=payload, write=method != "GET")
+        except EverkeepError as e:
+            if "escape sequences" not in str(e):
+                raise
+            # gh 2.9x+ refuses to print a file holding terminal escapes; everkeep is no terminal, and strips them below.
+            out = self._gh(args + ["--allow-escape-sequences"], input_text=payload, write=method != "GET")
         if accept and "raw" in accept:
-            return out
+            return _ESCAPES.sub("", out)
         if jq and jq.endswith("tojson"):
             return [json.loads(line) for line in out.splitlines() if line.strip()]
         out = out.strip()
