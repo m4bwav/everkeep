@@ -4,6 +4,11 @@ Every change to [SKILL.md](SKILL.md) and its companions, newest first, each with
 
 Entry shape: `### C-YYYYMMDD-n · date · one-line summary`, then `because:` (IDs or "user request"), `files:` (file and section), and a sentence on what changed. Cite section headings, not line numbers.
 
+### C-20261014-3 · 2026-10-14 · Fixes from the seeded-random-utilities run (the last learning-only run)
+- because: L-003 `npm-audit-dev-only` (confirmed again), L-010 `dependabot-ignore-has-update-types`, L-011 `gaps-read-the-repos-own-gates`
+- files: scripts/everkeep/duties.py, gaps.py, cli.py, providers/base.py, providers/github.py
+- deps holds only the bump kinds a dependabot ignore names; gaps recognises `npm stage publish` and a budget in a tarball or size script; vulns shows each Dependabot alert's scope (runtime or development).
+
 ### C-20261014-2 · 2026-10-14 · D14: a new transitive package escalates only with a danger signal
 - because: user request (decision D14, "only if it seems dangerous"), L-009 `transitive-owner-is-the-update-not-the-parent`
 - files: references/prs.md (classes table), references/providers.md (interface), scripts/everkeep/classify.py, prs.py, lockdiff.py, registries.py, scope.py, providers/base.py, github.py, fake.py, state.py

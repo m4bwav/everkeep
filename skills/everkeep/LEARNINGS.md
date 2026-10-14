@@ -25,10 +25,10 @@ Write an entry the moment a real signal happens: a user correction, the same err
 ### L-003 · 2026-10-13 · `npm-audit-dev-only`: npm audit findings are usually dev tooling; say how many ship
 - Trigger: the three-repo dry run reported "npm audit 10" on an npm package; all ten were in the linter's dependency chain.
 - Hypothesis: modern packages have zero runtime dependencies; audit counts dev dependencies too.
-- Rule: run `npm audit --omit=dev` as well and report shipped versus dev-only; flag a local clone that is behind origin, since its lockfile may be stale.
-- Evidence: `keep.py vulns --repo replace-string-at-position`, 2026-10-13
+- Rule: run `npm audit --omit=dev` as well and report shipped versus dev-only; flag a local clone that is behind origin, since its lockfile may be stale. Dependabot alerts carry the same fact as `dependency.scope` (runtime or development): show it beside each alert.
+- Evidence: `keep.py vulns --repo replace-string-at-position`, 2026-10-13; seeded-random-utilities run, 2026-10-14 (katex alert, development scope, shown without it)
 - Scope: skill
-- Status: active · helpful 1 · harmful 0 · last_confirmed 2026-10-13
+- Status: active · helpful 2 · harmful 0 · last_confirmed 2026-10-14
 
 ### L-004 · 2026-10-14 · `nuget-group-body-says-updated`: Dependabot's NuGet group PRs say "Updated [x](url) from A to B."
 - Trigger: single-repo run on IsImageUrlDotNet: the after-fix outlook for #17 listed "could not read which versions this bot PR changes"; the parser knew "Updates `x`" (npm groups) and "Bumps [x]" but not NuGet's "Updated [x]", so no release was looked up and the cooldown was never checked for NuGet group PRs.
@@ -75,6 +75,22 @@ Write an entry the moment a real signal happens: a user correction, the same err
 - Hypothesis: a direct package's dependency tree already spans several owners; what signals a takeover is an owner new to the whole update, not one different from the parent alone.
 - Rule: the owner check compares the new package's owners with the owners of the bumped packages and of every lockfile entry whose version the diff changes (`prs.transitive_rows`); age, registry presence, near-miss names and compromised versions are checked on their own. A lookup that fails is a danger signal, never a pass. Check a ruling's example against live registry data before encoding it.
 - Evidence: nuget.org search API for both packages, 2026-10-14; tests `test_nuget_lockfile_fix_names_the_recipe_and_the_class_after_it`, `test_new_transitive_with_a_stranger_owner_or_brand_new_still_escalates`, `test_transitive_danger_signals`
+- Scope: skill
+- Status: active · helpful 1 · harmful 0 · last_confirmed 2026-10-14
+
+### L-010 · 2026-10-14 · `dependabot-ignore-has-update-types`: an ignore entry may hold back only majors
+- Trigger: the seeded-random-utilities run: `deps` listed @types/node and typescript as "ignored in dependabot.yml" and skipped them, while open PR #26 was bumping @types/node within 24.x. Both ignores carry `update-types: ['version-update:semver-major']`.
+- Hypothesis: L-006's fix read only `dependency-name` and treated every ignore as total.
+- Rule: parse each ignore with its update-types (`duties.dependabot_ignores`); hold only the kinds it names and say which ("major updates ignored in dependabot.yml (latest 26.6.5)"); an entry with no update-types holds every kind. Test `test_dependabot_ignore_of_majors_only_holds_majors`.
+- Evidence: `keep.py deps --repo seeded-random-utilities` before and after, 2026-10-14
+- Scope: skill
+- Status: active · helpful 1 · harmful 0 · last_confirmed 2026-10-14
+
+### L-011 · 2026-10-14 · `gaps-read-the-repos-own-gates`: a gate can live under another name
+- Trigger: the same run reported "trusted publishing: unknown, no publish workflow found" for a repo whose release.yml stages releases with `npm stage publish` through OIDC, and "size-budget gate: gap" for a repo whose `scripts/check-tarball.mjs` fails CI over `TARBALL_BUDGET`. Both repos come from the package-modernize playbook.
+- Hypothesis: the gap checks matched the commands and file names of the day they were written; publishing and size gates both moved on.
+- Rule: publish detection matches `npm stage publish` too; a script under `scripts/` named for size, budget or tarball that mentions a budget counts as a size gate. Before calling something a gap, open the file that would hold it. Test `test_gaps_through_the_fake_adapter`.
+- Evidence: `keep.py gaps --repo seeded-random-utilities` before and after, 2026-10-14
 - Scope: skill
 - Status: active · helpful 1 · harmful 0 · last_confirmed 2026-10-14
 

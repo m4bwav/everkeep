@@ -19,7 +19,8 @@
                    "pr_creation_cap": {"enabled": true, "max_open_pull_requests": 1}},
       "alerts": {"dependency": [], "code": [], "secret": []},
       "files": {
-        "package.json": "{\"name\": \"npm-lib\", \"version\": \"2.0.0\", \"scripts\": {\"test\": \"node --test\"}, \"devDependencies\": {\"publint\": \"^0.3.24\"}, \"size-limit\": []}",
+        "package.json": "{\"name\": \"npm-lib\", \"version\": \"2.0.0\", \"scripts\": {\"test\": \"node --test\"}, \"devDependencies\": {\"publint\": \"^0.3.24\"}}",
+        "scripts/check-tarball.mjs": "// exactly the published files, under the size budget\nif (size >= TARBALL_BUDGET) process.exit(1);\n",
         "package-lock.json": "{}",
         "README.md": "# npm-lib\n\n![banner](.github/images/banner.jpg)\n",
         "SECURITY.md": "# Security\n",
@@ -29,7 +30,7 @@
         "test/golden/1.0.0.json": "{}",
         ".github/dependabot.yml": "version: 2\nupdates:\n  - package-ecosystem: npm\n    directory: /\n    cooldown:\n      default-days: 3\n",
         ".github/workflows/ci.yml": "name: ci\non: [push]\npermissions:\n  contents: read\njobs:\n  t:\n    runs-on: ubuntu-latest\n    steps:\n      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1\n",
-        ".github/workflows/release.yml": "name: release\non: [push]\npermissions:\n  contents: read\n  id-token: write\njobs:\n  r:\n    runs-on: ubuntu-latest\n    steps:\n      - run: npm publish --provenance\n"
+        ".github/workflows/release.yml": "name: release\non: [push]\npermissions:\n  contents: read\n  id-token: write\njobs:\n  r:\n    runs-on: ubuntu-latest\n    steps:\n      - run: npm stage publish ./npm-lib.tgz --ignore-scripts\n"
       },
       "files_at": {
         "main": {"package.json": "{\"name\": \"npm-lib\", \"scripts\": {\"test\": \"node --test\"}}"},

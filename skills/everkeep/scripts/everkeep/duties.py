@@ -167,6 +167,21 @@ def _nuget_latest(pkg: str) -> tuple[str | None, str | None]:
     return None, None
 
 
+ALL_BUMPS = {"major", "minor", "patch"}
+
+
+def dependabot_ignores(text: str) -> dict:
+    """{package: the bump kinds dependabot.yml ignores for it}; an entry without update-types ignores every kind."""
+    out = {}
+    for chunk in re.split(r"dependency-name:", text)[1:]:
+        chunk = re.split(r"package-ecosystem:", chunk)[0]
+        name = re.match(r"\s*[\"']?([\w.@/*-]+)", chunk)
+        kinds = set(re.findall(r"version-update:semver-(major|minor|patch)", chunk))
+        if name:
+            out[name.group(1)] = kinds or set(ALL_BUMPS)
+    return out
+
+
 def deps(entry: dict, store, limit: int = 40) -> dict:
     cfg = store.config()
     repo = entry["repo"]
@@ -176,14 +191,14 @@ def deps(entry: dict, store, limit: int = 40) -> dict:
 
     seen: set = set()
     dep_cfg = next((x for x in (".github/dependabot.yml", ".github/dependabot.yaml") if x in paths), None)
-    ignored = set(re.findall(r"dependency-name:\s*[\"']?([\w.@/*-]+)", p.file(repo.id, dep_cfg).decode() if dep_cfg else ""))
+    ignored = dependabot_ignores(p.file(repo.id, dep_cfg).decode() if dep_cfg else "")
     held = []  # the repo's own choice, not a bump: ignored in dependabot.yml, or an exact [x.y.z] pin
 
     def add(eco, name, current, fn):
         if len(rows) >= limit or (eco, name, current) in seen:
             return
         seen.add((eco, name, current))
-        if name in ignored or re.match(r"^\[[^,\]]+\]$", current or ""):
+        if ignored.get(name) == ALL_BUMPS or re.match(r"^\[[^,\]]+\]$", current or ""):
             return held.append(f"{name} {current}: " + ("ignored in dependabot.yml" if name in ignored else "exact pin"))
         try:
             latest, published = fn(name)
@@ -192,6 +207,8 @@ def deps(entry: dict, store, limit: int = 40) -> dict:
             return
         cur = re.sub(r"^[\^~>=<\s]+", "", current or "")
         kind = bump_kind(cur, latest or "") if latest and cur and cur != latest else "current"
+        if kind in ignored.get(name, ()):  # e.g. majors ignored: smaller updates of it still come as PRs
+            return held.append(f"{name} {current}: {kind} updates ignored in dependabot.yml (latest {latest})")
         rows.append({"ecosystem": eco, "package": name, "current": cur, "latest": latest, "bump": kind,
                      "latest_published": published, "age_days": age_days(parse_time(published))})
 
