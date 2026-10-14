@@ -35,6 +35,10 @@ class FileDiff:
     added: list[str] = field(default_factory=list)
     removed: list[str] = field(default_factory=list)
     context: list[str] = field(default_factory=list)
+    lines: list[tuple] = field(default_factory=list)  # (sign, text) in order; "@" starts a hunk
+
+
+NEW_PACKAGES = "new packages"
 
 
 @dataclass
@@ -44,6 +48,7 @@ class LockFileDiff:
     analysed: bool = True
     new_packages: list[str] = field(default_factory=list)
     removed_packages: list[str] = field(default_factory=list)
+    versions: dict = field(default_factory=dict)  # new-side version of each package this diff adds or moves
     removed_targets: list[str] = field(default_factory=list)
     added_targets: list[str] = field(default_factory=list)
     odd_sources: list[str] = field(default_factory=list)
@@ -54,7 +59,7 @@ class LockFileDiff:
         if not self.analysed:
             out.append(f"{self.path}: {self.kind} lockfile not analysed by everkeep")
         if self.new_packages:
-            out.append(f"{self.path}: new packages {', '.join(self.new_packages[:8])}" + (" ..." if len(self.new_packages) > 8 else ""))
+            out.append(f"{self.path}: {NEW_PACKAGES} {', '.join(self.new_packages[:8])}" + (" ..." if len(self.new_packages) > 8 else ""))
         if self.removed_targets:
             out.append(f"{self.path}: removed target sections {', '.join(self.removed_targets)}")
         if self.added_targets:
@@ -101,15 +106,14 @@ def split_diff(diff: str) -> list[FileDiff]:
             cur = FileDiff(path=m.group(2) if m else line[11:])
             files.append(cur)
             continue
+        if cur is not None and line.startswith("@@"):
+            cur.lines.append(("@", ""))
         if cur is None or line.startswith(("+++", "---", "index ", "@@", "new file", "deleted file", "similarity",
                                            "rename ", "old mode", "new mode", "Binary files")):
             continue
-        if line.startswith("+"):
-            cur.added.append(line[1:])
-        elif line.startswith("-"):
-            cur.removed.append(line[1:])
-        elif line.startswith(" "):
-            cur.context.append(line[1:])
+        if line[:1] in ("+", "-", " "):
+            {"+": cur.added, "-": cur.removed, " ": cur.context}[line[0]].append(line[1:])
+            cur.lines.append((line[0], line[1:]))
     return files
 
 
@@ -127,6 +131,21 @@ def _keys(lines: list[str], indent: int | None = None, pattern: str = r'^\s*"([^
     return out
 
 
+def _versions(fd: FileDiff, key: str, indent: int, name: str) -> dict:
+    """{package: version} for each package whose version line this diff adds, read in order (a key line opens a
+    package; a hunk boundary closes it)."""
+    out, cur = {}, None
+    for sign, s in fd.lines:
+        m = re.match(key, s) if sign != "-" else None
+        if sign == "@" or (m and _indent(s) == indent):
+            cur = m.group(1).split("node_modules/")[-1] if m else None
+        elif sign == "+" and cur:
+            v = re.match(rf'^\s*"{name}":\s*"([^"]+)"', s)
+            if v:
+                out[cur] = v.group(1)
+    return out
+
+
 def _npm(fd: FileDiff, registries: tuple) -> LockFileDiff:
     r = LockFileDiff(path=fd.path, kind="npm")
     key = r'^\s*"(node_modules/[^"]+)":\s*\{'
@@ -137,6 +156,7 @@ def _npm(fd: FileDiff, registries: tuple) -> LockFileDiff:
     added, removed = _keys(fd.added, pattern=key), _keys(fd.removed, pattern=key)
     r.new_packages = sorted(k.split("node_modules/")[-1] for k in added - removed)
     r.removed_packages = sorted(k.split("node_modules/")[-1] for k in removed - added)
+    r.versions = _versions(fd, key, 4, "version")
     for s in fd.added:
         m = re.search(r'"resolved":\s*"([^"]+)"', s)
         if m and not m.group(1).startswith(registries):
@@ -154,6 +174,7 @@ def _nuget(fd: FileDiff) -> LockFileDiff:
     added_p, removed_p = _keys(fd.added, 6), _keys(fd.removed, 6)
     r.new_packages = sorted(added_p - removed_p - set(_keys(fd.context, 6)))
     r.removed_packages = sorted(removed_p - added_p)
+    r.versions = _versions(fd, r'^\s*"([^"]+)":\s*\{', 6, "resolved")
     return r
 
 

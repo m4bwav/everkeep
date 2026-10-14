@@ -4,6 +4,8 @@ Plugin versions. Reasoned changes to the skill are in `skills/everkeep/CHANGELOG
 
 ## Unreleased
 
+- A lockfile adding a package no longer escalates on its own (decision D14): it escalates only when the new package shares no owner with the packages the same update moves, was first published under 90 days ago, is missing from its registry, has a name one edit from a popular or bumped package, or is a known-compromised version. Otherwise the verdict comment names it as a reason.
+- Removed the unused provider methods `open_pr` and `rate_state`.
 - `keep.py enable`: switch on the security settings the maintainer allows without asking (D11), dry run unless `--apply`.
 - `act` without `--apply` writes the comments it would post, word for word, beside the plan (`<plan>.comments.md`).
 - A failing bot PR with a known fix says so: the fix, and whether the PR will merge or still go to the maintainer afterwards (`prs show`, the verdict comment, the digest).

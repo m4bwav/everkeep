@@ -74,10 +74,6 @@ class Store:
             self._config = cfg
         return self._config
 
-    def overlay_text(self) -> str | None:
-        p = self.overlay_dir / "OVERLAY.md"
-        return p.read_text(encoding="utf-8") if p.exists() else None
-
     # ------------------------------------------------------------ selections
 
     def selections(self) -> dict:

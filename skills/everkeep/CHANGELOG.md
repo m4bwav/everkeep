@@ -4,6 +4,11 @@ Every change to [SKILL.md](SKILL.md) and its companions, newest first, each with
 
 Entry shape: `### C-YYYYMMDD-n · date · one-line summary`, then `because:` (IDs or "user request"), `files:` (file and section), and a sentence on what changed. Cite section headings, not line numbers.
 
+### C-20261014-2 · 2026-10-14 · D14: a new transitive package escalates only with a danger signal
+- because: user request (decision D14, "only if it seems dangerous"), L-009 `transitive-owner-is-the-update-not-the-parent`
+- files: references/prs.md (classes table), references/providers.md (interface), scripts/everkeep/classify.py, prs.py, lockdiff.py, registries.py, scope.py, providers/base.py, github.py, fake.py, state.py
+- lockdiff reads each package's new-side version in order; prs gathers owners and first publish time for every new package and for every package the update moves; classify escalates only on a danger signal and otherwise keeps the new package as a reason. Unused `open_pr`, `rate_state`, `GuardRefused` and `overlay_text` removed and two GitHub helpers folded to offset the size; the package still ends at 4,068 lines, past the 4,000 green line (yellow).
+
 ### C-20261014-1 · 2026-10-14 · Fixes from the first single-repo maintain run (IsImageUrlDotNet)
 - because: L-004 `nuget-group-body-says-updated`, L-005 `nuget-lock-targets-fix-verified`, L-006 `deps-respect-the-repos-own-holds`, L-007 `read-comments-before-posting`, L-008 `fsproj-is-a-package-project`
 - files: SKILL.md (Step 2), references/prs.md (Fixing a failing bot PR), scripts/everkeep/classify.py, verdict.py, act.py, cli.py, prs.py, report.py, util.py, duties.py, gaps.py, scope.py, providers/github.py

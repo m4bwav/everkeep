@@ -10,6 +10,7 @@ from __future__ import annotations
 import datetime as dt
 import re
 
+from .lockdiff import NEW_PACKAGES
 from .util import age_days, day, iso, parse_time, safe_token
 
 CLASSES = ("own", "hold", "fix", "escalate", "close-candidate", "merge-candidate")
@@ -232,8 +233,13 @@ def classify(f: dict, cfg: dict | None = None) -> dict:
     if deleted:
         esc.append("deletes files: " + ", ".join(deleted[:5]))
     lock = f.get("lockdiff") or {}
-    if lock and not lock.get("clean", True):
-        esc += lock.get("reasons", [])[:6]
+    new = [r for r in lock.get("reasons", []) if f": {NEW_PACKAGES} " in r]
+    esc += [r for r in lock.get("reasons", []) if r not in new][:6]
+    danger = [f"new package {t['package']}: {d}" for t in f.get("transitive", []) for d in t.get("danger", [])]
+    if danger or (new and "transitive" not in f):  # D14: a new package escalates only with a danger signal
+        esc += new[:3] + danger[:6]
+    elif new:
+        reasons += new[:3] + ["no danger signal in the new packages: known owners, not brand new, on the registry (rule D14)"]
     for r in f.get("releases", []):
         if r.get("error"):
             esc.append(f"could not verify when {r['package']} {r['to']} was published: {r['error'][:120]}")
@@ -272,7 +278,7 @@ def classify(f: dict, cfg: dict | None = None) -> dict:
     if bot and checks == "passed":
         if security:
             reasons.append("security update: exempt from the cooldown, not from green CI")
-        reasons.append("green on the head SHA, past the cooldown, lockfile diff clean")
+        reasons.append("green on the head SHA, past the cooldown, nothing risky in the lockfile diff")
         return done("merge-candidate")
     if not bot and checks == "passed":
         size = f.get("additions", 0) + f.get("deletions", 0)
@@ -302,6 +308,46 @@ def fix_recipe(f: dict) -> str | None:
             for x in (f.get("lockdiff") or {}).get("files", [])):
         return "nuget-lock-targets"
     return None
+
+
+# Names typosquats imitate; with the packages the PR bumps, a new package one edit from one of them escalates (D14).
+POPULAR = set("react lodash express axios chalk commander debug typescript eslint webpack vite jest mocha moment uuid "
+              "dotenv yargs request crypto-js colors minimist semver glob rimraf prettier newtonsoft.json serilog "
+              "nunit xunit moq automapper dapper polly".split())
+
+
+def _one_edit(a: str, b: str) -> bool:
+    a, b = re.sub(r"[-_.]", "", a.lower()), re.sub(r"[-_.]", "", b.lower())
+    if abs(len(a) - len(b)) > 1:
+        return False
+    i = next((k for k in range(min(len(a), len(b))) if a[k] != b[k]), min(len(a), len(b)))
+    return a[i + 1:] == b[i + 1:] or a[i:] == b[i + 1:] or a[i + 1:] == b[i:]
+
+
+def transitive_danger(pkg: str, version: str | None, info: dict, known_owners: set | None, bumped: set, cfg: dict) -> list[str]:
+    """D14's danger signals for one package a lockfile adds. Odd sources and install scripts escalate on their own
+    (lockdiff); an empty list means the package is only a reason in the verdict comment."""
+    if info.get("error"):
+        return [f"could not check it on its registry ({info['error'][:100]})"]
+    if not info.get("exists"):
+        return ["not found on its registry"]
+    out = []
+    owners = set(info.get("owners") or [])
+    if not known_owners:
+        out.append("could not read the owners of the packages this update moves, so its owner was not compared")
+    elif not owners & known_owners:
+        out.append(f"owned by {', '.join(sorted(owners)[:3]) or 'nobody listed'}, not by an owner of the packages this update moves")
+    created, days = parse_time(info.get("created")), int(cfg.get("new_package_days", 90))
+    if created is None:
+        out.append("its first publish date is unknown")
+    elif (age_days(created) or 0) < days:
+        out.append(f"first published {day(created)}, under {days} days ago")
+    near = sorted(k for k in POPULAR | bumped if k.lower() != pkg.lower() and len(k) >= 5 and _one_edit(pkg, k))
+    if near:
+        out.append(f"name is one edit from {near[0]}")
+    if f"{pkg}@{version}".lower() in {c.lower() for c in cfg.get("compromised") or []}:
+        out.append(f"known-compromised version {version}")
+    return out
 
 
 def negative_signals(f: dict) -> list[str]:

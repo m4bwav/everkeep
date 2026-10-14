@@ -38,6 +38,27 @@ def release_rows(bot: dict, provider) -> list[dict]:
     return rows
 
 
+def transitive_rows(ld, bot: dict | None, cfg: dict, cap: int = 30) -> list[dict]:
+    """D14: registry facts and danger signals for each package a lockfile adds. Its owner is compared with the owners of
+    every package the same update moves (the bumped packages and the lockfile entries whose version changed)."""
+    rows: dict[str, dict] = {}
+    bumped = {u["package"] for u in (bot or {}).get("updates", [])}
+    for x in ld.files:
+        if not x.new_packages:
+            continue
+        known = set()
+        for p in sorted((bumped | set(x.versions)) - set(x.new_packages))[:cap]:
+            known |= set(registries.package_facts(x.kind, p).get("owners") or [])
+        for p in x.new_packages:
+            if p not in rows and len(rows) >= cap:
+                rows["..."] = {"package": f"{len(x.new_packages)} in all", "danger": [f"more than {cap} new packages; the rest were not checked"]}
+            elif p not in rows:
+                info = registries.package_facts(x.kind, p)
+                rows[p] = {"package": p, "version": x.versions.get(p), "owners": info.get("owners"), "created": info.get("created"),
+                           "danger": C.transitive_danger(p, x.versions.get(p), info, known, bumped, cfg)}
+    return list(rows.values())
+
+
 def gather_pr(entry: dict, number: int, cfg: dict, provider=None) -> dict:
     repo = entry["repo"]
     provider = provider or get_provider(repo.id, cfg)
@@ -59,6 +80,8 @@ def gather_pr(entry: dict, number: int, cfg: dict, provider=None) -> dict:
     ld = lockdiff.analyse(diff)
     facts["lockdiff"] = ld.to_dict()
     facts["unexpected"] = ld.unexpected
+    if any(x.new_packages for x in ld.files):
+        facts["transitive"] = transitive_rows(ld, bot, cfg)
     if any(p.startswith(".github/workflows/") for p in paths):
         facts["pin_only"] = C.workflow_pin_only(lockdiff.split_diff(diff))
     for p in paths:

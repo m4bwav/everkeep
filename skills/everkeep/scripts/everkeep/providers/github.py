@@ -74,23 +74,16 @@ def reduce_rollup(items: list[dict]) -> ChecksState:
             else:
                 state = "pending"
         checks.append(Check(name=name, state=state, url=url, raw=raw))
-    states = {c.state for c in checks}
-    if not checks:
-        overall = "none"
-    elif "failed" in states:
-        overall = "failed"
-    elif "pending" in states:
-        overall = "pending"
-    elif "not_run" in states:
-        overall = "not_run"
-    elif "passed" in states:
-        overall = "passed"
-    else:
-        overall = "not_run"  # everything skipped
+    states = {c.state for c in checks}  # first present wins; everything skipped is not_run
+    overall = next((s for s in ("failed", "pending", "not_run", "passed") if s in states), "not_run") if checks else "none"
     for c in checks:
         if c.state == "skipped":
             c.state = "not_run"
     return ChecksState(state=overall, checks=checks)
+
+
+def _merge_methods(d: dict) -> list[str]:
+    return [m for m, k in (("merge", "allow_merge_commit"), ("squash", "allow_squash_merge"), ("rebase", "allow_rebase_merge")) if d.get(k)]
 
 
 class GitHubProvider(Provider):
@@ -248,8 +241,7 @@ class GitHubProvider(Provider):
         return {
             "private": d.get("private"),
             "has_wiki": d.get("has_wiki"),
-            "merge_methods": [m for m, k in (("merge", "allow_merge_commit"), ("squash", "allow_squash_merge"),
-                                              ("rebase", "allow_rebase_merge")) if d.get(k)],
+            "merge_methods": _merge_methods(d),
             "delete_branch_on_merge": d.get("delete_branch_on_merge"),
             "dependency_alerts": self._try(vuln_alerts, False),
             "security_updates": status("dependabot_security_updates"),
@@ -333,7 +325,7 @@ class GitHubProvider(Provider):
         return AuthorHistory(login=login, account_created=created, repos_with_prs_last_7d=len(repos), prior_prs_here=prior)
 
     def usual_merge_method(self, repo):
-        allowed = self.repo_settings_merge_methods(repo)
+        allowed = _merge_methods(self._try(lambda: self.api(f"repos/{repo.path}"), {}) or {})
         if len(allowed) == 1:
             return allowed[0]
         merged = self._try(lambda: self.api(f"repos/{repo.path}/pulls?state=closed&per_page=20",
@@ -345,11 +337,6 @@ class GitHubProvider(Provider):
                 if guess in allowed or not allowed:
                     return guess
         return "squash" if "squash" in allowed or not allowed else allowed[0]
-
-    def repo_settings_merge_methods(self, repo) -> list[str]:
-        d = self._try(lambda: self.api(f"repos/{repo.path}"), {}) or {}
-        return [m for m, k in (("merge", "allow_merge_commit"), ("squash", "allow_squash_merge"),
-                               ("rebase", "allow_rebase_merge")) if d.get(k)]
 
     def release_published(self, repo_path, tag):
         rel = self._try(lambda: self.api(f"repos/{repo_path}/releases/tags/{tag}", jq=".published_at"))
@@ -413,11 +400,6 @@ class GitHubProvider(Provider):
             args[3:3] = ["--job", m.group(2)]
         out = self._gh(args)
         return "\n".join(out.splitlines()[-200:])
-
-    def rate_state(self):
-        core = self._try(lambda: self.api("rate_limit", jq=".resources.core"), {}) or {}
-        return {"remaining": core.get("remaining"), "limit": core.get("limit"), "reset": core.get("reset"),
-                "writes_this_hour": len(self._writes)}
 
     # ------------------------------------------------------------ writes
 
@@ -507,10 +489,6 @@ class GitHubProvider(Provider):
         return [self.comment(repo, number, comment, apply),
                 self._write("close", f"{repo}#{number}", "close", "PATCH", f"repos/{repo.path}/pulls/{number}",
                             {"state": "closed"}, apply)]
-
-    def open_pr(self, repo, head, base, title, body, labels, apply):
-        return self._write("open_pr", repo, f"{head} -> {base}", "POST", f"repos/{repo.path}/pulls",
-                           {"title": title, "head": head, "base": base, "body": body}, apply)
 
     _ENABLE = {
         "dependency_alerts": ("PUT", "vulnerability-alerts", None),

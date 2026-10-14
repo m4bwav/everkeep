@@ -42,13 +42,11 @@ Plain dataclasses in, plain dataclasses out; no host-specific field crosses the 
 | `merge(repo, n, method, expected_head_sha, apply)` | `Action` | always guarded by the head SHA the model judged |
 | `close(repo, n, comment, apply)` | `[Action]` | |
 | `push_branch_fix(...)` | not in the adapter | pushing is plain git on a worktree; the adapter only supplies the clone URL |
-| `open_pr(repo, head, base, title, body, labels, apply)` | `Action` | |
 | `alerts(repo, kind)` | `[Alert]` or `Unsupported` | kinds: `dependency`, `code`, `secret` |
 | `enable(repo, feature, apply)` | `Action` or `Unsupported` | features: `dependency_alerts`, `security_updates`, `secret_scanning`, `push_protection`, `private_vuln_reporting`, `code_scanning_default`, `pr_creation_cap` |
 | `file(repo, path, ref)` | bytes or `None` | read a file without a clone |
 | `clone_url(repo)` | URL | for throwaway clones |
 | `run_logs(repo, check)` | text | failing check logs, for fixing bot PRs |
-| `rate_state()` | remaining, reset | the adapter also sleeps on its own when told to |
 
 `Capabilities` flags: `labels`, `assignees`, `reviewers`, `issues`, `alerts_dependency`, `alerts_code`, `alerts_secret`, `private_vuln_reporting`, `auto_merge`, `merge_methods`, `topics`, `wiki`, `release_feed`, `dependabot`, `rulesets`, `pr_creation_cap`, `trusted_publishing` (which registries trust its CI).
 

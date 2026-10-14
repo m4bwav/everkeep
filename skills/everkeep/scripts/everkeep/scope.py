@@ -195,16 +195,11 @@ def _on_registry(pkg: str, accounts: dict) -> bool | None:
     eco, name = pkg.split(":", 1)
     mine = {a.lower() for a in (accounts or {}).get(eco, [])}
     try:
-        if eco == "npm":
-            doc = R.fetch_json("https://registry.npmjs.org/" + name.replace("/", "%2F"))
-            if not doc.get("versions"):
-                return False  # unpublished: the name answers but holds nothing
-            owners = {(m.get("name") or "").lower() for m in doc.get("maintainers") or []}
-        elif eco == "nuget":
-            hits = R.fetch_json(f"https://azuresearch-usnc.nuget.org/query?q=packageid:{name}&prerelease=true").get("data", [])
-            if not hits:
-                return False
-            owners = {str(o).lower() for o in hits[0].get("owners") or []}
+        if eco in ("npm", "nuget"):
+            facts = R.package_facts(eco, name)  # an unpublished npm name answers but holds nothing: not on it
+            if "error" in facts or not facts["exists"]:
+                return None if "error" in facts else False
+            owners = set(facts["owners"])
         elif eco in ("openupm", "pypi"):  # neither lists owners in its JSON; existence is the test
             R.fetch_json(f"https://package.openupm.com/{name}" if eco == "openupm" else f"https://pypi.org/pypi/{name}/json")
             return True
