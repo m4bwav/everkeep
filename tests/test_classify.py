@@ -7,6 +7,7 @@ from everkeep import classify as C
 from everkeep import lockdiff, prs, scope
 from everkeep.providers.base import RepoId
 from everkeep.state import Store
+from everkeep.util import collapse_reasons
 
 
 class Pure(unittest.TestCase):
@@ -33,6 +34,12 @@ class Pure(unittest.TestCase):
         self.assertEqual(b["ecosystem"], "actions")
         b = C.parse_bot("dependabot[bot]", "dependabot/dotnet_sdk/dotnet-sdk-10.0.401", "Bump dotnet-sdk from 10.0.100 to 10.0.401", "", ["global.json"])
         self.assertEqual((b["ecosystem"], b["updates"][0]["package"]), ("dotnet-sdk", "dotnet-sdk"))
+
+    def test_parse_nuget_group_body_says_updated(self):
+        # IsImageUrlDotNet#17: without this the PR read as "could not read which versions" and skipped the cooldown.
+        b = C.parse_bot("dependabot[bot]", "dependabot/nuget/test-packages-1", "Bump the test-packages group with 1 update",
+                        "Updated [NUnit3TestAdapter](https://github.com/nunit/nunit3-vs-adapter) from 6.3.0 to 6.3.1.", [])
+        self.assertEqual(b["updates"], [{"package": "NUnit3TestAdapter", "from": "6.3.0", "to": "6.3.1", "bump": "patch"}])
 
     def test_parse_reduces_package_names_to_safe_characters(self):
         b = C.parse_bot("dependabot[bot]", "dependabot/npm_and_yarn/x", "", "Updates `evil<script>name` from 1.0.0 to 1.0.1", [])
@@ -99,6 +106,21 @@ class Table(EnvCase):
         c = self.cls("owner/nuget-lib", 12)
         self.assertEqual(c["class"], "fix")
         self.assertTrue(any("removed target sections" in r for r in c["reasons"]))
+
+    def test_nuget_lockfile_fix_names_the_recipe_and_the_class_after_it(self):
+        # IsImageUrlDotNet#17, 2026-10-14: regenerating on Windows fixed the sections, and the new transitive package
+        # NUnit3TestAdapter 6.3.1 brings still sends the PR to the maintainer; the comment says both up front.
+        c = self.cls("owner/nuget-lib", 12)
+        self.assertEqual(c["fix_recipe"], "nuget-lock-targets")
+        self.assertEqual(c["after_fix"], "escalate", c)
+        self.assertFalse(any("removed target sections" in r for r in c["after_fix_reasons"]))
+        self.assertTrue(any("new packages" in r for r in c["after_fix_reasons"]))
+
+    def test_one_finding_across_lockfiles_collapses(self):
+        rs = ["checks failed: build", "a/packages.lock.json: new packages X", "a/packages.lock.json: removed target sections net48",
+              "b/packages.lock.json: new packages X", "b/packages.lock.json: removed target sections net48"]
+        self.assertEqual(collapse_reasons(rs), ["checks failed: build", "new packages X (2 files)", "removed target sections net48 (2 files)"])
+        self.assertEqual(collapse_reasons(rs[:2]), rs[:2])
 
     def test_nuget_lockfile_dropping_net48_with_green_checks_escalates_never_merges(self):
         c = self.cls("owner/nuget-lib", 13)

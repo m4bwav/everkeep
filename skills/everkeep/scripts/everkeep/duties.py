@@ -159,9 +159,12 @@ def _npm_latest(name: str) -> tuple[str | None, str | None]:
 
 def _nuget_latest(pkg: str) -> tuple[str | None, str | None]:
     vers = R.fetch_json(f"https://api.nuget.org/v3-flatcontainer/{pkg.lower()}/index.json").get("versions", [])
-    stable = [v for v in vers if "-" not in v]
-    v = stable[-1] if stable else None
-    return v, (R.nuget_release(pkg, v).get("published") if v else None)
+    # The flat container lists unlisted versions too; nuget.org dates those 1900-01-01 (FSharp.Core 11.0.100).
+    for v in [v for v in vers if "-" not in v][::-1][:5]:
+        rel = R.nuget_release(pkg, v)
+        if rel.get("listed", True) and not str(rel.get("published") or "").startswith("1900"):
+            return v, rel.get("published")
+    return None, None
 
 
 def deps(entry: dict, store, limit: int = 40) -> dict:
@@ -172,11 +175,16 @@ def deps(entry: dict, store, limit: int = 40) -> dict:
     rows, toolchains, errors = [], [], []
 
     seen: set = set()
+    dep_cfg = next((x for x in (".github/dependabot.yml", ".github/dependabot.yaml") if x in paths), None)
+    ignored = set(re.findall(r"dependency-name:\s*[\"']?([\w.@/*-]+)", p.file(repo.id, dep_cfg).decode() if dep_cfg else ""))
+    held = []  # the repo's own choice, not a bump: ignored in dependabot.yml, or an exact [x.y.z] pin
 
     def add(eco, name, current, fn):
         if len(rows) >= limit or (eco, name, current) in seen:
             return
         seen.add((eco, name, current))
+        if name in ignored or re.match(r"^\[[^,\]]+\]$", current or ""):
+            return held.append(f"{name} {current}: " + ("ignored in dependabot.yml" if name in ignored else "exact pin"))
         try:
             latest, published = fn(name)
         except (R.FetchError, EverkeepError, ValueError) as e:
@@ -202,7 +210,7 @@ def deps(entry: dict, store, limit: int = 40) -> dict:
         text = (p.file(repo.id, path) or b"").decode("utf-8", "replace")
         for name, ver in re.findall(r'<Package(?:Reference|Version)\s+Include="([^"]+)"\s+Version="([^"]+)"', text):
             add("nuget", name, ver, _nuget_latest)
-        for tfm in re.findall(r"<TargetFrameworks?>([^<]+)</TargetFrameworks?>", text):
+        for tfm in re.findall(r"<TargetFrameworks?>([^<$]+)</TargetFrameworks?>", text):
             toolchains.append({"tool": f"target frameworks ({path})", "value": tfm, "floor": "net10.0 (net8.0 and net9.0 end 2026-11-10)"})
     if "global.json" in paths:
         try:
@@ -215,7 +223,7 @@ def deps(entry: dict, store, limit: int = 40) -> dict:
         m = re.search(r"m_EditorVersion:\s*(\S+)", (p.file(repo.id, pv) or b"").decode("utf-8", "replace"))
         toolchains.append({"tool": "Unity editor", "value": m.group(1) if m else "?", "floor": "6000.3 LTS (6.0 LTS ends October 2026)"})
     return {"repo": entry["id"], "outdated": [r for r in rows if r["bump"] != "current"], "checked": len(rows),
-            "toolchains": toolchains, "errors": errors}
+            "toolchains": toolchains, "errors": errors, "held": held}
 
 
 # ------------------------------------------------------------------ knowledge base

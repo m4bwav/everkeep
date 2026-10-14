@@ -120,7 +120,7 @@ def execute(plan: dict, store, apply: bool, learn: bool | None = None, run: dict
         state = store.repo_state(facts["repo"])
         posted_before = any(d.get("pr") == n and d.get("verdict_posted") for d in state.get("decisions", []))
         if learn or v in ("hold", "fix", "escalate"):
-            body = V.verdict_body(facts, v, learn)
+            body = res["comment"] = V.verdict_body(facts, v, learn)
             actions.append(provider.upsert_marked_comment(rid, n, V.MARKER, body, apply))
         if not learn:
             if v == "escalate":

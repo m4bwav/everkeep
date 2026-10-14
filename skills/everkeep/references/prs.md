@@ -57,7 +57,9 @@ Every PR everkeep holds, fixes, escalates or plans to close gets one comment, fo
 
 1. Read the failing check's log: `gh run view RUN --job JOB --log-failed` (the check URL is in the facts).
 2. Check out the PR branch into a throwaway worktree outside every project folder: `git -C <clone> fetch origin pull/N/head:ek-N` then `git -C <clone> worktree add <scratch>/ek-N ek-N`. Restore `.mcp.json`, `.claude/`, `.vscode/`, `AGENTS.md`, `CLAUDE.md`, `.husky/`, `.npmrc`, `.gemini/` from the base branch before running anything ([safety.md](safety.md)).
-3. Make the smallest mechanical fix: regenerate a lockfile on the OS that resolves every target (Dependabot's NuGet updater drops `net48` and `win-x86` sections: `dotnet restore --force-evaluate` on Windows restores them), bump a pinned SDK, adjust a test pin. No refactors.
+3. Make the smallest mechanical fix: regenerate a lockfile on the OS that resolves every target, bump a pinned SDK, adjust a test pin. No refactors. `prs show` prints a known fix (`fix_recipe`) and the class the PR gets after it (`after_fix`) when the table recognises the failure:
+   - `nuget-lock-targets` (verified on IsImageUrlDotNet#17, 2026-10-14): Dependabot's NuGet updater drops the `net48` and `win-x86` sections from `packages.lock.json`, and locked restore fails with NU1004 on every OS. NU1004's text names the two framework sets the wrong way round; trust the diff. On Windows: `dotnet restore --force-evaluate`, then `dotnet restore --locked-mode`, `dotnet build --no-restore -c Release` and `dotnet test --no-build -c Release` must pass before you push. Windows writes CRLF lockfiles; Git normalises them, so a lockfile listed as modified with no diff is harmless. Commit only the lockfiles that really changed.
+   - `after_fix: escalate` means the fix is still worth pushing (CI goes green, the comment updates), but the PR then waits for the maintainer: say so, never merge it.
 4. Commit with a plain message and no AI attribution, push to the bot's branch (decision D12), delete the worktree. CI reruns; next run the PR goes back through the table.
 5. Could not fix it: escalate with what you found.
 

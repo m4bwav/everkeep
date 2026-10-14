@@ -117,5 +117,29 @@ class PublicText(unittest.TestCase):
         self.assertIn("touches executed config", body)
 
 
+    def test_fix_comment_names_the_known_fix_and_what_follows(self):
+        facts = {"bot": {"bot": "dependabot"}, "tier": "medium", "classification": {
+            "class": "fix", "hold_until": None, "reasons": ["checks failed: ci"], "fix_recipe": "nuget-lock-targets",
+            "after_fix": "escalate", "after_fix_reasons": ["t/packages.lock.json: new packages Microsoft.TestPlatform.AdapterUtilities"]}}
+        body = V.verdict_body(facts, "fix", True)
+        self.assertIn("Known fix: Dependabot's NuGet updater dropped target sections", body)
+        self.assertIn("Would push the smallest mechanical fix", body)
+        self.assertIn("still goes to the maintainer: t/packages.lock.json: new packages Microsoft.TestPlatform.AdapterUtilities", body)
+        self.assertIn("everkeep pushes", V.verdict_body(facts, "fix", False))
+
+
+class Deps(EnvCase):
+    def test_unlisted_nuget_version_is_never_latest(self):
+        # FSharp.Core 11.0.100 is unlisted, dated 1900-01-01 by nuget.org; deps once called it the latest (2026-10-14).
+        from unittest import mock
+        from everkeep import duties as D, registries as R
+        reg = {"https://api.nuget.org/v3-flatcontainer/fsharp.core/index.json": {"versions": ["10.0.112", "11.0.100", "11.0.101-rc2"]},
+               "https://api.nuget.org/v3/registration5-gz-semver2/fsharp.core/index.json": {"items": [{"items": [
+                   {"catalogEntry": {"version": "10.0.112", "published": "2026-09-09T00:00:00+00:00", "listed": True}},
+                   {"catalogEntry": {"version": "11.0.100", "published": "1900-01-01T00:00:00+00:00", "listed": False}}]}]}}
+        with mock.patch.object(R, "fetch_json", lambda url, timeout=20: reg[url]):
+            self.assertEqual(D._nuget_latest("FSharp.Core"), ("10.0.112", "2026-09-09T00:00:00+00:00"))
+
+
 if __name__ == "__main__":
     unittest.main()

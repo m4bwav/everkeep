@@ -101,6 +101,9 @@ def show(facts: dict, diff: str, body: str) -> str:
              f"Head: {facts['head_sha']}  Checks: {facts['checks']['summary']}",
              f"Files: {len(facts['files'])} (+{facts['additions']} -{facts['deletions']})", "",
              "Reasons:", *[f"- {r}" for r in c["reasons"]], ""]
+    if c.get("after_fix"):
+        lines += [f"Known fix: {c['fix_recipe']} (references/prs.md)" if c.get("fix_recipe") else "Known fix: none; diagnose from the log",
+                  f"After the fix: {c['after_fix']}: " + "; ".join(c.get("after_fix_reasons") or []), ""]
     if facts.get("releases"):
         lines += ["Releases:"] + [f"- {r['package']} {r['from']} -> {r['to']} ({r['bump']}): published {r.get('published')}, "
                                   f"publisher {r.get('publisher')}" + (f" (was {r['prev_publisher']})" if r.get('prev_publisher') else "")

@@ -185,6 +185,16 @@ def safe_token(text: str | None, cap: int = 100) -> str:
 
 # ---------------------------------------------------------------- Markdown
 
+def collapse_reasons(reasons: Iterable[str]) -> list[str]:
+    """One finding repeated across lockfiles becomes one line, so a cut keeps the findings that differ (three
+    new-package lines once hid the removed target sections behind them) and a comment does not repeat itself."""
+    seen: dict[str, list] = {}
+    for r in reasons:
+        m = re.match(r"^\S+(?:\.json|\.lock|\.yaml|\.sum|\.lockb): (.*)$", r)
+        seen.setdefault(m.group(1) if m else r, [r, 0])[1] += 1
+    return [f"{k} ({c} files)" if c > 1 else first for k, (first, c) in seen.items()]
+
+
 def md_table(headers: Sequence[str], rows: Iterable[Sequence[Any]]) -> str:
     def cell(v: Any) -> str:
         return str("" if v is None else v).replace("|", "\\|").replace("\n", " ")

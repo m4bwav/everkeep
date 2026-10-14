@@ -5,7 +5,7 @@ from __future__ import annotations
 
 from .prs import title_cell
 from .runs import summary
-from .util import atomic_write, read_json
+from .util import atomic_write, collapse_reasons, read_json
 
 SECTIONS = [("merge", "Merged", "Would merge"), ("close", "Closed", "Would close"),
             ("bump", "Outdated dependencies (bump candidates)", "Outdated dependencies (bump candidates)"), ("fix", "Fixed", "Needs a fix (bot PRs whose checks failed or did not run)"),
@@ -51,7 +51,9 @@ def build(run: dict, store, reviewer: str | None = None) -> str:
             c = f["classification"]
             res = acts.get((f["repo"], f["number"]))
             sec = CLASS_TO_SECTION[c["class"]]
-            line = f"- [{f['repo'].split(':', 1)[-1]}#{f['number']}]({f['url']}) {title_cell(f['title'])}: {'; '.join(c['reasons'][:3])}"
+            line = f"- [{f['repo'].split(':', 1)[-1]}#{f['number']}]({f['url']}) {title_cell(f['title'])}: {'; '.join(collapse_reasons(c['reasons'])[:3])}"
+            if c.get("after_fix"):
+                line += f" (known fix: {c.get('fix_recipe') or 'none'}; after it: {c['after_fix']})"
             if c.get("hold_until"):
                 line += f" (until {c['hold_until'][:10]})"
             if res:
