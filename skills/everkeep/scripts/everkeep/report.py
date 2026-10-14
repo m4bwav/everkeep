@@ -15,6 +15,11 @@ CLASS_TO_SECTION = {"merge-candidate": "merge", "close-candidate": "close", "fix
                     "hold": "hold", "own": "own"}
 
 
+def _names(repos: list[str], cap: int = 12) -> str:
+    names = sorted(dict.fromkeys(repos))
+    return ", ".join(names[:cap]) + (f" and {len(names) - cap} more" if len(names) > cap else "")
+
+
 def _act_results(store, run: dict) -> dict[tuple, dict]:
     out = {}
     for p in sorted(store.run_dir(run["id"]).glob("act-*.json")):
@@ -28,7 +33,13 @@ def build(run: dict, store, reviewer: str | None = None) -> str:
     applied = any(r.get("apply") for r in acts.values())
     learn = run.get("learn") or any(r.get("learn") for r in acts.values())
     buckets: dict[str, list[str]] = {k: [] for k, _, _ in SECTIONS}
-    refused, not_checked, kb_lines, gap_lines, vuln_lines, deadlines, failed = [], [], [], [], [], {}, []
+    refused, kb_lines, vuln_lines, deadlines, failed = [], [], [], {}, []
+    not_checked: dict[str, list[str]] = {}  # message -> repos, so 60 repos missing one tool make one line
+    gaps_by: dict[str, list[str]] = {}
+
+    def nc(repo: str, items) -> None:
+        for x in items:
+            not_checked.setdefault(x, []).append(repo.split(":", 1)[-1])
     for r in run["repos"]:
         if r["status"] in ("failed", "skipped"):
             failed.append(f"- {r['id']}: {r['status']}: {r['reason']}")
@@ -53,22 +64,23 @@ def build(run: dict, store, reviewer: str | None = None) -> str:
             buckets[sec].append(line)
         v = d.get("vulns")
         if v:
-            not_checked += [f"- {facts['repo']}: {x}" for x in v.get("not_checked", [])]
+            nc(facts["repo"], v.get("not_checked", []))
             n = {k: len(x) for k, x in (v.get("alerts") or {}).items() if x}
-            scans = [f"{s['tool']} {s.get('findings', '?')}" for s in v.get("scanners", []) if s.get("findings")]
+            scans = [f"{s['tool']} {s.get('findings', '?')}" + (f" ({s['detail']})" if s.get("detail") else "")
+                     for s in v.get("scanners", []) if s.get("findings")]
             if n or scans:
                 vuln_lines.append(f"- {facts['repo']}: " + ", ".join([f"{c} {k} alerts" for k, c in n.items()] + scans))
         g = d.get("gaps")
         if g:
-            not_checked += [f"- {facts['repo']}: {x}" for x in g.get("not_checked", [])]
-            open_gaps = [x["gap"] for x in g.get("gaps", []) if x["status"] == "gap"]
-            if open_gaps:
-                gap_lines.append(f"- {facts['repo']} ({len(open_gaps)}): " + ", ".join(open_gaps))
+            nc(facts["repo"], g.get("not_checked", []))
+            for x in g.get("gaps", []):
+                if x["status"] == "gap":
+                    gaps_by.setdefault(x["gap"], []).append(facts["repo"].split(":", 1)[-1])
             for dl in g.get("deadlines", []):
                 deadlines.setdefault((dl["date"], dl["what"]), []).append(f"{facts['repo']} ({dl['where']})")
         k = d.get("kb")
         if k:
-            not_checked += [f"- {facts['repo']}: {x}" for x in k.get("not_checked", [])][:1]
+            nc(facts["repo"], k.get("not_checked", []))
             if k["status"] != "ok":
                 kb_lines.append(f"- {facts['repo']}: {k['status']}" + (f": `{k['commands'][0]}`" if k.get("commands") else ""))
         dp = d.get("deps")
@@ -104,12 +116,16 @@ def build(run: dict, store, reviewer: str | None = None) -> str:
         out += ["", "### Refused at the moment of acting", ""] + refused
     if vuln_lines:
         out += ["", "### Vulnerabilities", ""] + vuln_lines
-    if gap_lines:
-        out += ["", "### Modernization gaps", ""] + gap_lines
+    if gaps_by:
+        out += ["", "### Modernization gaps (per gap, most repos first)", ""]
+        out += [f"- {gap} ({len(repos)}): {_names(repos)}" for gap, repos in sorted(gaps_by.items(), key=lambda kv: -len(kv[1]))]
     if kb_lines:
         out += ["", "### Knowledge base", ""] + kb_lines
     if not_checked:
-        out += ["", "### Not checked", ""] + sorted(set(not_checked))
+        out += ["", "### Not checked", ""]
+        for msg, repos in sorted(not_checked.items(), key=lambda kv: -len(kv[1])):
+            every = len(set(repos)) == len(run["repos"]) > 1
+            out.append(f"- {msg} ({'every repo' if every else _names(repos)})")
     if failed:
         out += ["", "### Failed or skipped repos", ""] + failed
     pending = [r["id"] for r in run["repos"] if r["status"] == "pending"]

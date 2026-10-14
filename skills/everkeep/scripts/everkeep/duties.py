@@ -83,8 +83,18 @@ def _npm_audit(path: Path) -> dict:
     except ValueError:
         return {"tool": "npm audit", "status": "error", "detail": (p.stderr or "")[-300:]}
     n = sum(v for k, v in meta.items() if k != "total" and isinstance(v, int))
-    return {"tool": "npm audit", "status": "ok", "findings": n,
-            "detail": ", ".join(f"{v} {k}" for k, v in meta.items() if v and k != "total")}
+    shipped = None
+    if n:  # the same audit without dev dependencies: what users of the package actually install
+        q = run(["npm", "audit", "--omit=dev", "--json"], cwd=path, timeout=600)
+        try:
+            m = (json.loads(q.stdout or "{}").get("metadata") or {}).get("vulnerabilities") or {}
+            shipped = sum(v for k, v in m.items() if k != "total" and isinstance(v, int))
+        except ValueError:
+            pass
+    detail = ", ".join(f"{v} {k}" for k, v in meta.items() if v and k != "total")
+    if shipped is not None:
+        detail += f"; {shipped} in shipped dependencies, {n - shipped} dev-only"
+    return {"tool": "npm audit", "status": "ok", "findings": n, "shipped": shipped, "detail": detail}
 
 
 def _dotnet(path: Path) -> dict:
@@ -119,6 +129,13 @@ def vulns(entry: dict, store, throwaway: bool = False) -> dict:
         if c.path is None:
             out["not_checked"].append("neutral scanners: no local clone (config clones or clone_roots), and --clone not given")
             return out
+        if not c.temp:
+            here = run(["git", "-C", str(c.path), "rev-parse", "HEAD"], timeout=30).stdout.strip()
+            there = run(["git", "-C", str(c.path), "ls-remote", "origin", "HEAD"], timeout=60).stdout.split()[:1]
+            if there and here and there[0] != here:
+                out["clone_head"], out["origin_head"] = here, there[0]
+                out["not_checked"].append("the local clone differs from origin's default branch, so scanner findings "
+                                          "may be stale (--clone scans a fresh copy)")
         files = {x.name for x in c.path.iterdir()}
         for tool, wanted, fn in (("osv-scanner", True, _osv),
                                  ("npm", "package-lock.json" in files, _npm_audit),
@@ -154,9 +171,12 @@ def deps(entry: dict, store, limit: int = 40) -> dict:
     paths = p.tree(repo.id, repo.default_branch)
     rows, toolchains, errors = [], [], []
 
+    seen: set = set()
+
     def add(eco, name, current, fn):
-        if len(rows) >= limit:
+        if len(rows) >= limit or (eco, name, current) in seen:
             return
+        seen.add((eco, name, current))
         try:
             latest, published = fn(name)
         except (R.FetchError, EverkeepError, ValueError) as e:
