@@ -2,6 +2,9 @@
 
 import unittest
 
+from unittest import mock
+
+import helpers
 from helpers import EnvCase, FIXTURES
 from everkeep import classify as C
 from everkeep import lockdiff, prs, scope
@@ -11,6 +14,17 @@ from everkeep.util import collapse_reasons
 
 
 class Pure(unittest.TestCase):
+    def test_transitive_danger_signals(self):
+        ok = {"exists": True, "owners": ["microsoft"], "created": "2021-02-24T00:00:00Z"}
+        self.assertEqual(C.transitive_danger("Microsoft.TestPlatform.AdapterUtilities", "18.10.1", ok, {"microsoft"}, set(), {}), [])
+        self.assertIn("name is one edit from crypto-js", C.transitive_danger("crypto_js", "1.0.0", ok, {"microsoft"}, set(), {}))
+        self.assertIn("name is one edit from lodash", C.transitive_danger("1odash", "1.0.0", ok, {"microsoft"}, set(), {}))
+        self.assertIn("name is one edit from Owner.Lib", C.transitive_danger("Owner.Libs", "1.0.0", ok, {"microsoft"}, {"Owner.Lib"}, {}))
+        self.assertEqual(C.transitive_danger("x-helper", "2.0.0", ok, {"microsoft"}, set(), {"compromised": ["X-Helper@2.0.0"]}),
+                         ["known-compromised version 2.0.0"])
+        self.assertIn("could not read the owners", C.transitive_danger("x-helper", "1", ok, set(), set(), {})[0])
+        self.assertIn("could not check", C.transitive_danger("x-helper", "1", {"error": "HTTP 500"}, {"a"}, set(), {})[0])
+
     def test_bump_kind(self):
         self.assertEqual(C.bump_kind("8.0.1", "8.0.2"), "patch")
         self.assertEqual(C.bump_kind("v7.0.1", "v7.1.0"), "minor")
@@ -108,13 +122,30 @@ class Table(EnvCase):
         self.assertTrue(any("removed target sections" in r for r in c["reasons"]))
 
     def test_nuget_lockfile_fix_names_the_recipe_and_the_class_after_it(self):
-        # IsImageUrlDotNet#17, 2026-10-14: regenerating on Windows fixed the sections, and the new transitive package
-        # NUnit3TestAdapter 6.3.1 brings still sends the PR to the maintainer; the comment says both up front.
+        # IsImageUrlDotNet#17, 2026-10-14: regenerating on Windows fixed the sections. The new transitive package
+        # (Microsoft.TestPlatform.AdapterUtilities, owned by Microsoft like the Microsoft.Testing packages the same bump
+        # moves, first published 2021) carries no danger signal, so under D14 the fixed PR is a merge candidate.
         c = self.cls("owner/nuget-lib", 12)
         self.assertEqual(c["fix_recipe"], "nuget-lock-targets")
-        self.assertEqual(c["after_fix"], "escalate", c)
+        self.assertEqual(c["after_fix"], "merge-candidate", c)
         self.assertFalse(any("removed target sections" in r for r in c["after_fix_reasons"]))
         self.assertTrue(any("new packages" in r for r in c["after_fix_reasons"]))
+        self.assertTrue(any("rule D14" in r for r in c["after_fix_reasons"]))
+
+    def test_new_transitive_with_a_stranger_owner_or_brand_new_still_escalates(self):
+        search = helpers.NUGET_SEARCH.format("Microsoft.TestPlatform.AdapterUtilities")
+        reg = "https://api.nuget.org/v3/registration5-gz-semver2/microsoft.testplatform.adapterutilities/index.json"
+        with mock.patch.dict(helpers.REGISTRY, {search: {"data": [{"owners": ["someone-new"]}]}}):
+            c = self.cls("owner/nuget-lib", 12)
+        self.assertEqual(c["after_fix"], "escalate")
+        self.assertTrue(any("owned by someone-new" in r for r in c["after_fix_reasons"]), c)
+        with mock.patch.dict(helpers.REGISTRY, {reg: {"items": [{"items": [{"catalogEntry": {"published": "2026-09-30T00:00:00Z"}}]}]}}):
+            c = self.cls("owner/nuget-lib", 12)
+        self.assertEqual(c["after_fix"], "escalate")
+        self.assertTrue(any("first published 2026-09-30" in r for r in c["after_fix_reasons"]), c)
+        with mock.patch.dict(helpers.REGISTRY, {search: {"data": []}}):
+            c = self.cls("owner/nuget-lib", 12)
+        self.assertTrue(any("not found on its registry" in r for r in c["after_fix_reasons"]), c)
 
     def test_one_finding_across_lockfiles_collapses(self):
         rs = ["checks failed: build", "a/packages.lock.json: new packages X", "a/packages.lock.json: removed target sections net48",

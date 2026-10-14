@@ -40,10 +40,6 @@ class Unsupported(EverkeepError):
     """A capability this provider lacks; the duty records a Not checked line with its fallback."""
 
 
-class GuardRefused(EverkeepError):
-    exit_code = 6
-
-
 class _Dict:
     def to_dict(self) -> dict:
         return dataclasses.asdict(self)
@@ -168,7 +164,7 @@ class Alert(_Dict):
 
 @dataclass
 class Action(_Dict):
-    kind: str  # merge, close, comment, label, assign, review, enable, open_pr, verdict
+    kind: str  # merge, close, comment, label, assign, review, enable, verdict
     target: str  # repo#n or repo
     detail: str = ""
     command: str = ""  # what was run or would run
@@ -274,9 +270,6 @@ class Provider:
     def close(self, repo: RepoId, number: int, comment: str, apply: bool) -> list[Action]:
         raise NotImplementedError
 
-    def open_pr(self, repo: RepoId, head: str, base: str, title: str, body: str, labels: list[str], apply: bool) -> Action:
-        raise NotImplementedError
-
     def alerts(self, repo: RepoId, kind: str) -> list[Alert]:
         raise NotImplementedError
 
@@ -290,9 +283,6 @@ class Provider:
         raise NotImplementedError
 
     def run_logs(self, repo: RepoId, check_url: str) -> str:
-        raise NotImplementedError
-
-    def rate_state(self) -> dict:
         raise NotImplementedError
 
 

@@ -24,12 +24,21 @@ def _npm(times: dict, publisher="GitHub Actions", trusted=True, overrides=None):
     return {"time": times, "versions": versions, "dist-tags": {"latest": list(times)[-1]}}
 
 
+NUGET_SEARCH = "https://azuresearch-usnc.nuget.org/query?q=packageid:{}&prerelease=true"
+
 REGISTRY = {
     "https://registry.npmjs.org/@types%2Fnode": _npm({"24.19.0": "2026-09-01T00:00:00Z", "24.19.1": "2026-10-01T00:00:00Z"}),
     "https://registry.npmjs.org/publint": _npm({"0.3.24": "2026-08-19T06:40:11.452Z", "0.3.25": "2026-10-01T18:03:33.533Z"}),
     "https://registry.npmjs.org/left-pad-x": _npm({"1.0.0": "2025-01-01T00:00:00Z", "1.0.1": "2026-10-13T12:00:00Z"}),
     "https://api.nuget.org/v3/registration5-gz-semver2/nunit3testadapter/index.json":
         {"items": [{"items": [{"catalogEntry": {"version": "6.3.1", "published": "2026-10-09T20:22:50.37+00:00"}}]}]},
+    # D14: owners as nuget.org listed them on 2026-10-14 (IsImageUrlDotNet#17's new transitive package)
+    NUGET_SEARCH.format("NUnit3TestAdapter"): {"data": [{"owners": ["charliepoole", "NUnit", "OsirisTerje", "rprouse"]}]},
+    NUGET_SEARCH.format("Microsoft.Testing.Platform"): {"data": [{"owners": ["Microsoft"]}]},
+    NUGET_SEARCH.format("Microsoft.TestPlatform.AdapterUtilities"): {"data": [{"owners": ["Microsoft", "vstest"]}]},
+    "https://api.nuget.org/v3/registration5-gz-semver2/microsoft.testplatform.adapterutilities/index.json":
+        {"items": [{"items": [{"catalogEntry": {"version": "1.0.0", "published": "1900-01-01T00:00:00+00:00"}},
+                              {"catalogEntry": {"version": "16.9.1", "published": "2021-02-24T18:00:00+00:00"}}]}]},
 }
 
 

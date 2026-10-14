@@ -72,6 +72,34 @@ def nuget_release(pkg: str, version: str) -> dict:
     return {"published": None, "exists": False}
 
 
+def package_facts(eco: str, name: str) -> dict:
+    """{exists, owners, created} for a package as a whole, or {error}: scope's ownership test and D14's checks on a
+    package a lockfile adds. Owners are npm maintainers or nuget.org owners; created is the first publish time."""
+    try:
+        if eco == "npm":
+            doc = fetch_json("https://registry.npmjs.org/" + urllib.parse.quote(name, safe="@"))
+            return {"exists": bool(doc.get("versions")), "created": (doc.get("time") or {}).get("created"),
+                    "owners": sorted({(m.get("name") or "").lower() for m in doc.get("maintainers") or []})}
+        if eco == "nuget":
+            hits = fetch_json(f"https://azuresearch-usnc.nuget.org/query?q=packageid:{name}&prerelease=true").get("data", [])
+            if not hits:
+                return {"exists": False, "owners": []}
+            out = {"exists": True, "created": None, "owners": sorted({str(o).lower() for o in hits[0].get("owners") or []})}
+            try:  # unlisted versions are dated 1900-01-01
+                page = fetch_json(f"https://api.nuget.org/v3/registration5-gz-semver2/{name.lower()}/index.json")["items"][0]
+                dates = [(it.get("catalogEntry") or {}).get("published") or "" for it in
+                         page.get("items") or fetch_json(page["@id"]).get("items", [])]
+                out["created"] = min((d for d in dates if d and not d.startswith("1900")), default=None)
+            except (FetchError, KeyError, IndexError):
+                pass  # created stays unknown, which D14 reads as a danger signal
+            return out
+    except FetchError as e:
+        return {"exists": False, "owners": []} if "HTTP 404" in str(e) else {"error": str(e)}
+    except (ValueError, KeyError, IndexError, AttributeError, TypeError):
+        return {"error": f"unreadable registry data for {name}"}
+    return {"error": f"no package lookup for ecosystem {eco}"}
+
+
 def pypi_release(pkg: str, version: str) -> dict:
     doc = fetch_json(f"https://pypi.org/pypi/{urllib.parse.quote(pkg)}/{urllib.parse.quote(_norm(version))}/json")
     urls = doc.get("urls") or []

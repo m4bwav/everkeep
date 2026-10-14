@@ -70,6 +70,14 @@ Write an entry the moment a real signal happens: a user correction, the same err
 - Scope: skill
 - Status: active · helpful 1 · harmful 0 · last_confirmed 2026-10-14
 
+### L-009 · 2026-10-14 · `transitive-owner-is-the-update-not-the-parent`: compare a new package's owner with every package the update moves
+- Trigger: building D14 for IsImageUrlDotNet#17. nuget.org lists NUnit3TestAdapter's owners as charliepoole, NUnit, OsirisTerje and rprouse, and the new Microsoft.TestPlatform.AdapterUtilities as Microsoft and vstest: the "different owner than the direct package" rule as first worded would still have escalated the PR it was written to let through. The same bump moves four Microsoft.Testing packages from 2.3.3 to 2.4.1, all owned by Microsoft.
+- Hypothesis: a direct package's dependency tree already spans several owners; what signals a takeover is an owner new to the whole update, not one different from the parent alone.
+- Rule: the owner check compares the new package's owners with the owners of the bumped packages and of every lockfile entry whose version the diff changes (`prs.transitive_rows`); age, registry presence, near-miss names and compromised versions are checked on their own. A lookup that fails is a danger signal, never a pass. Check a ruling's example against live registry data before encoding it.
+- Evidence: nuget.org search API for both packages, 2026-10-14; tests `test_nuget_lockfile_fix_names_the_recipe_and_the_class_after_it`, `test_new_transitive_with_a_stranger_owner_or_brand_new_still_escalates`, `test_transitive_danger_signals`
+- Scope: skill
+- Status: active · helpful 1 · harmful 0 · last_confirmed 2026-10-14
+
 <!-- Example (delete once you have a real entry):
 ### L-001 · 2026-10-13 · One-line lesson in plain words
 - Trigger: what happened, with dates or counts

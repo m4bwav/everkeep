@@ -145,9 +145,6 @@ class FakeProvider(Provider):
     def run_logs(self, repo, check_url):
         return self.data.get("logs", {}).get(check_url, "")
 
-    def rate_state(self):
-        return {"remaining": 5000, "limit": 5000, "writes_this_hour": len(self.writes)}
-
     # writes
     def upsert_marked_comment(self, repo, number, marker, body, apply):
         p = self._pr(repo, number)
@@ -205,9 +202,6 @@ class FakeProvider(Provider):
             self._pr(repo, number)["state"] = "closed"
         acts.append(self._write("close", f"{repo}#{number}", "close", apply))
         return acts
-
-    def open_pr(self, repo, head, base, title, body, labels, apply):
-        return self._write("open_pr", str(repo), f"{head} -> {base}", apply, title=title)
 
     def enable(self, repo, feature, apply):
         if apply:

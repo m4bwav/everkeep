@@ -67,6 +67,10 @@ class LockDiff(unittest.TestCase):
         self.assertIn("net10.0/win-x86", removed)
         self.assertEqual(len(d.files), 2)
         self.assertTrue(any("removed target sections" in r for r in d.reasons))
+        # D14 reads the new side's versions: the added package and the ones the bump moves
+        self.assertEqual(d.files[0].new_packages, ["Microsoft.TestPlatform.AdapterUtilities"])
+        self.assertEqual(d.files[0].versions["Microsoft.TestPlatform.AdapterUtilities"], "18.10.1")
+        self.assertEqual(d.files[0].versions["Microsoft.Testing.Platform"], "2.4.1")
 
     def test_clean_npm_group_bump(self):
         d = lockdiff.analyse(read("npm-group-clean.diff"))
