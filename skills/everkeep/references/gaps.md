@@ -13,7 +13,7 @@ Statuses: `ok`, `gap`, `unknown` (the host would not say), `n/a`. Report `unknow
 | Fix column | What to do |
 |---|---|
 | cheap | apply in one everkeep PR per repo on branch `everkeep/gaps`, under the same rules as any other PR (it touches workflows or config, so it escalates unless the repo is low tier and only docs and templates changed). Templates: package-modernize's `templates/security/`, its `scripts/topics.py suggest OWNER/REPO`, `scripts/make-icon.py` |
-| switch on (D11) | `enable` through the adapter, allowed without asking: Dependabot alerts and security updates, secret scanning and push protection, private vulnerability reporting, CodeQL default setup on public repos, the open-PR cap for users without write access |
+| switch on (D11) | `KEEP enable all <scope>` (dry run, then `--apply`; it refuses anything else), allowed without asking: Dependabot alerts and security updates, secret scanning and push protection, private vulnerability reporting, CodeQL default setup on public repos, the open-PR cap for users without write access |
 | ask first (D11) | rulesets, immutable releases, Actions policy, anything that switches a protection off: ask the user |
 | banner | an image-generation skill (ComfyUI or similar) when one is available (1536x640, `.github/images/banner.jpg`); otherwise it stays a gap |
 | wikiwright | hand over to the wikiwright skill |
