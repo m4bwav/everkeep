@@ -74,6 +74,19 @@ class Seam(EnvCase):
         self.assertIn("## Deadlines", out)
         self.assertTrue(list(Path(self.home, "runs").glob("*/digest.md")))
 
+    def test_enable_switches_on_only_what_d11_allows(self):
+        code, out, err = keep("enable", "all", "--repo", "owner/nuget-lib")
+        self.assertEqual(code, 0, err)
+        self.assertIn("would switch on", out)
+        self.assertIn("already on", out)  # secret scanning was on
+        self.assertEqual(self.provider().writes, [])
+        code, out, err = keep("enable", "all", "--repo", "owner/nuget-lib", "--apply")
+        self.assertEqual(code, 0, err)
+        self.assertIn("private_vuln_reporting", [w["detail"].split()[-1] for w in self.provider().writes])
+        code, out, err = keep("enable", "rulesets", "--repo", "owner/nuget-lib", "--apply")
+        self.assertEqual(code, 1)
+        self.assertIn("not allowed without asking", err)
+
     def test_gitlab_clone_is_not_supported_and_does_nothing_else(self):
         if not self.git:
             self.skipTest("git not installed")

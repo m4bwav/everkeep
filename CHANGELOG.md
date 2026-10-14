@@ -4,6 +4,8 @@ Plugin versions. Reasoned changes to the skill are in `skills/everkeep/CHANGELOG
 
 ## Unreleased
 
+- `keep.py enable`: switch on the security settings the maintainer allows without asking (D11), dry run unless `--apply`.
+
 ## 0.1.0
 
 First version.

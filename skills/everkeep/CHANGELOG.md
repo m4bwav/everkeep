@@ -4,6 +4,11 @@ Every change to [SKILL.md](SKILL.md) and its companions, newest first, each with
 
 Entry shape: `### C-YYYYMMDD-n · date · one-line summary`, then `because:` (IDs or "user request"), `files:` (file and section), and a sentence on what changed. Cite section headings, not line numbers.
 
+### C-20261013-2 · 2026-10-13 · `keep.py enable` for the D11 settings
+- because: user request (decision D11); the gaps table named the fix but no command applied it, found while setting up this repository
+- files: SKILL.md (Step 3 table), references/gaps.md (Fixing), scripts/everkeep/cli.py
+- `enable` switches on only the settings D11 allows, reads the current state first, and refuses anything else.
+
 ### C-20261013-1 · 2026-10-13 · Created as an evergreen unit
 - because: user request
 - files: SKILL.md, RESEARCH.md, LEARNINGS.md, evergreen.json (skills: also TESTS.md and evals/evals.json)

@@ -186,6 +186,35 @@ def cmd_act(args, store):
     _out(args, results, f"{head}\n\n" + md_table(["PR", "verdict", "table now", "result"], rows))
 
 
+D11_SWITCH_ON = ("dependency_alerts", "security_updates", "secret_scanning", "push_protection",
+                 "private_vuln_reporting", "code_scanning_default", "pr_creation_cap")
+
+
+def cmd_enable(args, store):
+    """Switch on the settings decision D11 allows without asking; only those, and only switching on."""
+    features = list(D11_SWITCH_ON) if args.features == "all" else [f.strip() for f in args.features.split(",") if f.strip()]
+    bad = [f for f in features if f not in D11_SWITCH_ON]
+    if bad:
+        raise EverkeepError(f"not allowed without asking: {', '.join(bad)}; allowed: {', '.join(D11_SWITCH_ON)}")
+    entries = S.resolve(args, store)
+    rows, data = [], []
+    for e in entries:
+        p = get_provider(e["repo"].id, store.config())
+        settings = p.repo_settings(e["repo"].id)
+        for f in features:
+            if f in ("code_scanning_default", "pr_creation_cap") and e["visibility"] != "public":
+                rows.append([e["id"], f, "skipped: public repos only"])
+                continue
+            cur = settings.get(f)
+            if cur is True or cur == "configured" or (isinstance(cur, dict) and cur.get("enabled")):
+                rows.append([e["id"], f, "already on"])
+                continue
+            a = p.enable(e["repo"].id, f, args.apply)
+            data.append(as_dict(a))
+            rows.append([e["id"], f, ("did" if a.applied else "would") + f" switch on{'' if a.ok else ' FAILED ' + a.error[:120]}"])
+    _out(args, data, ("APPLIED" if args.apply else "DRY RUN (add --apply)") + "\n\n" + md_table(["repo", "setting", "result"], rows))
+
+
 def cmd_run(args, store):
     if args.action == "start":
         entries = S.resolve(args, store)
@@ -280,6 +309,9 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--apply", action="store_true")
     p.add_argument("--learn", action="store_true", help="verdict comments only, whatever the plan says")
     p.add_argument("--run", metavar="RUN_ID", help="record the results in this run's digest")
+    p = add("enable", cmd_enable, help="switch on the security settings decision D11 allows (dry run unless --apply)")
+    p.add_argument("features", help="comma-separated, or all: " + ", ".join(D11_SWITCH_ON))
+    p.add_argument("--apply", action="store_true")
     p = add("run", cmd_run, help="start, resume or show a resumable multi-repo run")
     p.add_argument("action", choices=["start", "resume", "status"])
     p.add_argument("run_id", nargs="?")

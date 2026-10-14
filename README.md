@@ -48,6 +48,7 @@ python skills/everkeep/scripts/keep.py report latest
 | `vulns` | host alerts plus osv-scanner, npm audit and `dotnet package list --vulnerable` on a clone |
 | `deps` | outdated direct dependencies and toolchains, with publish dates |
 | `gaps` | missing SECURITY.md, banner, topics, pinned actions, security settings, trusted publishing, wiki, size gate, CONTRIBUTING.md, and dated deadlines |
+| `enable FEATURES` | switch on Dependabot alerts and security updates, secret scanning, push protection, private vulnerability reporting, CodeQL default setup and the open-PR cap; nothing else, and never off |
 | `kb` | repos with no `ai-docs/` knowledge base, with the everlast command to set one up |
 | `research gather` | dependents, downloads and discussion for an ecosystem note |
 | `run start/resume/status`, `report` | resumable multi-repo runs and their digest |

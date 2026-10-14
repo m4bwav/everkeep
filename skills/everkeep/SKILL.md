@@ -49,7 +49,7 @@ Run the ones the user asked for; for "maintain", run all of them on one repo, an
 |---|---|---|
 | vulnerabilities | `KEEP vulns <scope>` (`--clone` to scan a repo with no local clone) | [references/deps.md](references/deps.md) |
 | dependencies and toolchains | `KEEP deps <scope>` | [references/deps.md](references/deps.md) |
-| modernization gaps | `KEEP gaps <scope>` (`--deep` runs package-modernize's checks) | [references/gaps.md](references/gaps.md) |
+| modernization gaps | `KEEP gaps <scope>` (`--deep` runs package-modernize's checks); `KEEP enable all <scope>` switches on the security settings D11 allows | [references/gaps.md](references/gaps.md) |
 | knowledge base | `KEEP kb <scope>` | [references/kb.md](references/kb.md) |
 | ecosystem research | `KEEP research gather <scope>` | [references/research.md](references/research.md) |
 
