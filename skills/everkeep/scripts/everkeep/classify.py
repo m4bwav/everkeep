@@ -63,7 +63,7 @@ def bump_kind(old: str, new: str) -> str:
 # ------------------------------------------------------------------ bot PRs
 
 _UPDATES = [re.compile(r"Updates? `([^`]+)` from ([\w.+-]+) to ([\w.+-]+)"),
-            re.compile(r"Bumps \[([^\]]+)\]\([^)]*\) from ([\w.+-]+) to ([\w.+-]+)"),
+            re.compile(r"(?:Bumps|Updated) \[([^\]]+)\]\([^)]*\) from ([\w.+-]+) to ([\w.+-]+)"),  # Updated: NuGet groups
             re.compile(r"[Bb]ump (\S+) from ([\w.+-]+) to ([\w.+-]+)")]
 
 
@@ -198,8 +198,17 @@ def classify(f: dict, cfg: dict | None = None) -> dict:
             reasons.append("checks did not run (cancelled or skipped): " + ", ".join(failing[:5]))
             if f.get("visibility") == "private":
                 reasons.append("private repo: its self-hosted runner may be offline (the overlay's private_runner check)")
-        for r in (f.get("lockdiff") or {}).get("reasons", []):
-            reasons.append(r)
+        lock = f.get("lockdiff") or {}
+        reasons += lock.get("reasons", [])
+        recipe = fix_recipe(f)
+        if recipe:
+            out["fix_recipe"] = recipe
+            lock = {**lock, "reasons": [r for r in lock.get("reasons", []) if FIX_RECIPES[recipe]["repairs"] not in r]}
+            lock["clean"] = not lock["reasons"]
+        # What the table says once the fix lands and CI is green: the verdict comment says it up front, so a fix
+        # that still ends with the maintainer (a new transitive package, say) is not a surprise later.
+        after = classify({**f, "checks": {"state": "passed", "checks": []}, "lockdiff": lock}, cfg)
+        out["after_fix"], out["after_fix_reasons"] = after["class"], after["reasons"]
         return done("fix")
 
     # escalate
@@ -274,6 +283,25 @@ def classify(f: dict, cfg: dict | None = None) -> dict:
         return done("escalate")
     reasons.append("no rule matched; the maintainer decides")
     return done("escalate")
+
+
+# Failures with a known mechanical fix (references/prs.md, "Fixing a failing bot PR"). `repairs` is the lockdiff
+# reason the fix removes; `how` is said in the verdict comment, so it is fixed text, never PR text.
+FIX_RECIPES = {
+    "nuget-lock-targets": {
+        "repairs": "removed target sections",
+        "how": "Dependabot's NuGet updater dropped target sections from packages.lock.json (NU1004 in locked mode); "
+               "regenerate the lockfiles on Windows with dotnet restore --force-evaluate",
+    },
+}
+
+
+def fix_recipe(f: dict) -> str | None:
+    if (f.get("bot") or {}).get("bot") == "dependabot" and any(
+            x.get("path", "").endswith("packages.lock.json") and x.get("removed_targets")
+            for x in (f.get("lockdiff") or {}).get("files", [])):
+        return "nuget-lock-targets"
+    return None
 
 
 def negative_signals(f: dict) -> list[str]:

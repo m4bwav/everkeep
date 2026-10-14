@@ -431,43 +431,39 @@ class GitHubProvider(Provider):
             cid = mine[-1]["id"]
             if (mine[-1].get("body") or "").strip() == body.strip():
                 return Action(kind="verdict", target=target, detail=f"comment {cid} already says this", applied=False)
-            cmd = ["gh", "api", "-X", "PATCH", f"repos/{repo.path}/issues/comments/{cid}", "-f", "body=<verdict>"]
-            return self._action("verdict", target, f"edit comment {cid}", cmd, apply,
-                                lambda: self.api(f"repos/{repo.path}/issues/comments/{cid}", "PATCH", {"body": body}))
-        cmd = ["gh", "api", "-X", "POST", f"repos/{repo.path}/issues/{number}/comments", "-f", "body=<verdict>"]
-        return self._action("verdict", target, "create verdict comment", cmd, apply,
-                            lambda: self.api(f"repos/{repo.path}/issues/{number}/comments", "POST", {"body": body}))
+            return self._write("verdict", target, f"edit comment {cid}", "PATCH",
+                               f"repos/{repo.path}/issues/comments/{cid}", {"body": body}, apply)
+        return self._write("verdict", target, "create verdict comment", "POST",
+                           f"repos/{repo.path}/issues/{number}/comments", {"body": body}, apply)
+
+    def _write(self, kind: str, target, detail: str, method: str, path: str, body: dict | None, apply: bool) -> Action:
+        """One REST write as an Action; the command shown is the gh api call it makes, body on stdin."""
+        cmd = ["gh", "api", "-X", method, path] + (["--input", "-"] if body else [])
+        return self._action(kind, str(target), detail, cmd, apply, lambda: self.api(path, method, body))
 
     def comment(self, repo, number, body, apply):
-        cmd = ["gh", "api", "-X", "POST", f"repos/{repo.path}/issues/{number}/comments", "-f", "body=<comment>"]
-        return self._action("comment", f"{repo}#{number}", "comment", cmd, apply,
-                            lambda: self.api(f"repos/{repo.path}/issues/{number}/comments", "POST", {"body": body}))
+        return self._write("comment", f"{repo}#{number}", "comment", "POST", f"repos/{repo.path}/issues/{number}/comments",
+                           {"body": body}, apply)
 
     def ensure_label(self, repo, name, color, apply):
         names = self._try(lambda: self.api(f"repos/{repo.path}/labels?per_page=100", paginate=True, jq=".[].name | tojson"), []) or []
         if name in names:
             return Action(kind="label", target=str(repo), detail=f"label {name} exists")
-        cmd = ["gh", "label", "create", name, "-R", self._r(repo), "--color", color]
-        return self._action("label", str(repo), f"create label {name}", cmd, apply,
-                            lambda: self.api(f"repos/{repo.path}/labels", "POST",
-                                             {"name": name, "color": color, "description": "Waiting for the maintainer's review"}))
+        return self._write("label", repo, f"create label {name}", "POST", f"repos/{repo.path}/labels",
+                           {"name": name, "color": color, "description": "Waiting for the maintainer's review"}, apply)
 
     def add_labels(self, repo, number, names, apply):
-        cmd = ["gh", "pr", "edit", str(number), "-R", self._r(repo), "--add-label", ",".join(names)]
-        return self._action("label", f"{repo}#{number}", f"add {', '.join(names)}", cmd, apply,
-                            lambda: self.api(f"repos/{repo.path}/issues/{number}/labels", "POST", {"labels": names}))
+        return self._write("label", f"{repo}#{number}", f"add {', '.join(names)}", "POST",
+                           f"repos/{repo.path}/issues/{number}/labels", {"labels": names}, apply)
 
     def escalate(self, repo, number, to_user, authored_by_other, apply):
-        acts = [self.ensure_label(repo, "needs-review", "d93f0b", apply),
-                self.add_labels(repo, number, ["needs-review"], apply)]
-        cmd = ["gh", "pr", "edit", str(number), "-R", self._r(repo), "--add-assignee", to_user]
-        acts.append(self._action("assign", f"{repo}#{number}", f"assign {to_user}", cmd, apply,
-                                 lambda: self.api(f"repos/{repo.path}/issues/{number}/assignees", "POST", {"assignees": [to_user]})))
+        t, base = f"{repo}#{number}", f"repos/{repo.path}"
+        acts = [self.ensure_label(repo, "needs-review", "d93f0b", apply), self.add_labels(repo, number, ["needs-review"], apply),
+                self._write("assign", t, f"assign {to_user}", "POST", f"{base}/issues/{number}/assignees",
+                            {"assignees": [to_user]}, apply)]
         if authored_by_other:
-            cmd = ["gh", "pr", "edit", str(number), "-R", self._r(repo), "--add-reviewer", to_user]
-            acts.append(self._action("review", f"{repo}#{number}", f"request review from {to_user}", cmd, apply,
-                                     lambda: self.api(f"repos/{repo.path}/pulls/{number}/requested_reviewers", "POST",
-                                                      {"reviewers": [to_user]})))
+            acts.append(self._write("review", t, f"request review from {to_user}", "POST",
+                                    f"{base}/pulls/{number}/requested_reviewers", {"reviewers": [to_user]}, apply))
         return acts
 
     def merge(self, repo, number, method, expected_head_sha, apply):
@@ -508,17 +504,13 @@ class GitHubProvider(Provider):
         return a
 
     def close(self, repo, number, comment, apply):
-        acts = [self.comment(repo, number, comment, apply)]
-        cmd = ["gh", "pr", "close", str(number), "-R", self._r(repo)]
-        acts.append(self._action("close", f"{repo}#{number}", "close", cmd, apply,
-                                 lambda: self.api(f"repos/{repo.path}/pulls/{number}", "PATCH", {"state": "closed"})))
-        return acts
+        return [self.comment(repo, number, comment, apply),
+                self._write("close", f"{repo}#{number}", "close", "PATCH", f"repos/{repo.path}/pulls/{number}",
+                            {"state": "closed"}, apply)]
 
     def open_pr(self, repo, head, base, title, body, labels, apply):
-        cmd = ["gh", "pr", "create", "-R", self._r(repo), "--head", head, "--base", base, "--title", title, "--body", "<body>"]
-        return self._action("open_pr", str(repo), f"{head} -> {base}", cmd, apply,
-                            lambda: self.api(f"repos/{repo.path}/pulls", "POST",
-                                             {"title": title, "head": head, "base": base, "body": body}))
+        return self._write("open_pr", repo, f"{head} -> {base}", "POST", f"repos/{repo.path}/pulls",
+                           {"title": title, "head": head, "base": base, "body": body}, apply)
 
     _ENABLE = {
         "dependency_alerts": ("PUT", "vulnerability-alerts", None),
@@ -535,6 +527,5 @@ class GitHubProvider(Provider):
         if feature not in self._ENABLE:
             raise Unsupported(f"unknown feature {feature}")
         method, sub, body = self._ENABLE[feature]
-        path = f"repos/{repo.path}" + (f"/{sub}" if sub else "")
-        cmd = ["gh", "api", "-X", method, path] + (["--input", "-"] if body else [])
-        return self._action("enable", str(repo), f"switch on {feature}", cmd, apply, lambda: self.api(path, method, body))
+        return self._write("enable", repo, f"switch on {feature}", method, f"repos/{repo.path}" + (f"/{sub}" if sub else ""),
+                           body, apply)

@@ -82,10 +82,7 @@ def resolve(args, store, cwd: str | Path = ".") -> list[dict]:
     if getattr(args, "repo", None) or (spec and spec.get("repos")):
         names = list(args.repo or []) + list((spec or {}).get("repos") or [])
         for name in names:
-            owner = None
-            if "/" not in name and ":" not in name:
-                owner = get_provider("github", cfg).whoami()
-            rid = parse_repo_arg(name, owner, hosts)
+            rid = repo_id(name, cfg)
             repos.append(get_provider(rid, cfg).get_repo(rid))
     elif getattr(args, "all", False) or filters or (spec and (spec.get("all") or spec.get("filter"))):
         inc = _includes(args, cfg, filters, spec)
@@ -102,6 +99,12 @@ def resolve(args, store, cwd: str | Path = ".") -> list[dict]:
     entries = [e for e in entries if all(_match(e, k, v, store) for k, v in filters)]
     entries.sort(key=lambda e: (TIER_RANK.get(e["tier"], 1), e["id"].lower()))
     return entries
+
+
+def repo_id(name: str, cfg: dict) -> RepoId:
+    """A repo argument as an id; a bare name is the logged-in account's repo, the same for every command."""
+    owner = get_provider("github", cfg).whoami() if "/" not in name and ":" not in name else None
+    return parse_repo_arg(name, owner, cfg.get("hosts"))
 
 
 def _parse_filter(text: str) -> tuple[str, str]:

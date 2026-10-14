@@ -17,9 +17,9 @@ from . import report as REP
 from . import runs as RUNS
 from . import scope as S
 from .providers.base import AuthMissing, as_dict
-from .providers.registry import BUILT, get_provider, parse_repo_arg
+from .providers.registry import BUILT, get_provider
 from .state import Store
-from .util import EverkeepError, dumps, md_table, now, read_json, write_json
+from .util import EverkeepError, collapse_reasons, dumps, md_table, now, read_json, write_json
 
 
 def _out(args, data, markdown: str) -> None:
@@ -90,7 +90,7 @@ def cmd_prs(args, store):
     cfg = store.config()
     if args.action == "show":
         repo_text, _, n = args.target.rpartition("#")
-        rid = parse_repo_arg(repo_text or ".", hosts=cfg.get("hosts")) if repo_text else S.current_repo(".", cfg.get("hosts"))
+        rid = S.repo_id(repo_text, cfg) if repo_text else S.current_repo(".", cfg.get("hosts"))
         p = get_provider(rid, cfg)
         entry = S.describe(p.get_repo(rid), store)
         facts = P.gather_pr(entry, int(n), cfg, p)
@@ -107,7 +107,7 @@ def cmd_prs(args, store):
         plan = A.draft_plan(all_facts, bool(args.learn or cfg.get("learn")))
         write_json(Path(args.plan), plan)
     rows = [[f"{f['repo'].split(':', 1)[-1]}#{f['number']}", f["classification"]["class"], f["checks"]["state"],
-             P.title_cell(f["title"]), "; ".join(f["classification"]["reasons"][:2])] for f in all_facts]
+             P.title_cell(f["title"]), "; ".join(collapse_reasons(f["classification"]["reasons"])[:3])] for f in all_facts]
     md = _scope_md(entries) + "\n\n" + (md_table(["PR", "class", "checks", "title (untrusted)", "why"], rows) if rows else "No open PRs.")
     if args.plan:
         md += f"\n\nDraft plan written to {args.plan}: read it, move items toward escalate as you judge, then `keep.py act {args.plan}`."
@@ -150,6 +150,8 @@ def cmd_deps(args, store):
         if d["outdated"]:
             md += md_table(["ecosystem", "package", "current", "latest", "bump", "published"],
                            [[o["ecosystem"], o["package"], o["current"], o["latest"], o["bump"], str(o.get("latest_published"))[:10]] for o in d["outdated"]])
+        if d.get("held"):
+            md += "\n\nHeld by the repo's own choice (not bump candidates):\n" + "\n".join(f"- {h}" for h in d["held"])
         if d["toolchains"]:
             md += "\n\nToolchains:\n" + "\n".join(f"- {t['tool']}: {t['value']} (floor {t['floor']})" for t in d["toolchains"])
         if d["errors"]:
@@ -183,7 +185,13 @@ def cmd_act(args, store):
                          for a in r["actions"]) or ""
         rows.append([f"{r['repo']}#{r['pr']}", r["verdict"], r.get("table", ""), r["refused"] or acts])
     head = ("APPLIED" if args.apply else "DRY RUN (add --apply to act)") + (", learning mode" if any(r["learn"] for r in results) else "")
-    _out(args, results, f"{head}\n\n" + md_table(["PR", "verdict", "table now", "result"], rows))
+    tail = ""
+    previews = [f"## {r['repo']}#{r['pr']}\n\n{r['comment']}" for r in results if r.get("comment")]
+    if previews and not args.apply:
+        out = Path(args.plan).with_suffix(".comments.md")
+        out.write_text("\n\n".join(previews) + "\n", encoding="utf-8")
+        tail = f"\n\nThe comments it would post, word for word: {out}. Read them before --apply."
+    _out(args, results, f"{head}\n\n" + md_table(["PR", "verdict", "table now", "result"], rows) + tail)
 
 
 D11_SWITCH_ON = ("dependency_alerts", "security_updates", "secret_scanning", "push_protection",
@@ -261,7 +269,7 @@ def cmd_report(args, store):
 
 def cmd_state(args, store):
     cfg = store.config()
-    rid = str(parse_repo_arg(args.repo, get_provider("github", cfg).whoami() if "/" not in args.repo else None, cfg.get("hosts")))
+    rid = str(S.repo_id(args.repo, cfg))
     if args.action == "forget":
         print(f"forgot {rid}" if store.forget(rid) else f"nothing stored for {rid}")
         return

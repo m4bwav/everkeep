@@ -5,6 +5,11 @@ Plugin versions. Reasoned changes to the skill are in `skills/everkeep/CHANGELOG
 ## Unreleased
 
 - `keep.py enable`: switch on the security settings the maintainer allows without asking (D11), dry run unless `--apply`.
+- `act` without `--apply` writes the comments it would post, word for word, beside the plan (`<plan>.comments.md`).
+- A failing bot PR with a known fix says so: the fix, and whether the PR will merge or still go to the maintainer afterwards (`prs show`, the verdict comment, the digest).
+- Fixed: Dependabot's NuGet group PRs ("Updated [x] from A to B") were read as having no versions, so their cooldown was never checked.
+- Fixed: `deps` no longer offers unlisted NuGet versions, and lists packages the repo holds on purpose (ignored in dependabot.yml, exact `[x.y.z]` pins) apart from bump candidates.
+- Fixed: the icon gap now reads F# and VB projects; `prs show` and `state` accept a bare repo name; the same lockfile finding in several files is one line.
 
 ## 0.1.0
 

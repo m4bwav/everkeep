@@ -75,7 +75,9 @@ def audit(entry: dict, store, deep: bool = False) -> dict:
     if "plugin" in ecos:
         row("icon", "ok" if ".claude-plugin/icon.png" in pset else "gap", "", "cheap: make-icon.py")
     elif any(x.startswith("nuget:") for x in packages):
-        props = [x for x in paths if x.endswith((".csproj", "Directory.Build.props"))][:6]
+        # F# and VB libraries pack too (an .fsproj icon read as missing); src/ first, where the packed project lives.
+        props = sorted((x for x in paths if x.endswith((".csproj", ".fsproj", ".vbproj", "Directory.Build.props"))),
+                       key=lambda x: (not x.startswith("src/"), x))[:6]
         icon = any("<PackageIcon>" in _text(p, repo, x) for x in props)
         row("icon", "ok" if icon else "gap", "PackageIcon", "cheap: make-icon.py")
     dep = has_any(".github/dependabot.yml", ".github/dependabot.yaml", "renovate.json", ".github/renovate.json")

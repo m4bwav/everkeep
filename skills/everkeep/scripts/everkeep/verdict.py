@@ -8,7 +8,7 @@ import re
 from pathlib import Path
 
 from . import VERSION
-from .util import day, now, parse_time
+from .util import collapse_reasons, day, now, parse_time
 
 MARKER = "<!-- everkeep:verdict -->"
 TEMPLATES = Path(__file__).resolve().parents[2] / "templates" / "comments"
@@ -45,7 +45,7 @@ def _reason_lines(facts: dict) -> list[str]:
     if not facts.get("bot"):
         # A human PR's paths and check names are the author's own text: keep only the rule each reason came from.
         reasons = [r.split(":", 1)[0] for r in reasons]
-    return [f"- {public(r)}" for r in dict.fromkeys(reasons) if public(r)]
+    return [f"- {public(r)}" for r in collapse_reasons(reasons) if public(r)]
 
 
 def verdict_body(facts: dict, verdict: str, learn: bool, extra: str = "") -> str:
@@ -64,8 +64,13 @@ def verdict_body(facts: dict, verdict: str, learn: bool, extra: str = "") -> str
             nxt = "everkeep looks again on its next run."
     elif verdict == "fix":
         headline = "Checks did not pass; this needs a fix before anything else."
-        nxt = ("everkeep pushes the smallest mechanical fix to this branch when it can, then the PR goes back through "
-               "the rules. If it cannot, it goes to the maintainer's review list.")
+        from .classify import FIX_RECIPES
+        recipe = FIX_RECIPES.get(c.get("fix_recipe") or "")
+        after = {"merge-candidate": "Once the fix is green, every rule for merging holds.", "escalate":
+                 "Once the fix is green it still goes to the maintainer: " + "; ".join(public(r, 160) for r in collapse_reasons(c.get("after_fix_reasons") or [])[:3]) + "."}
+        nxt = ((f"Known fix: {public(recipe['how'])}. " if recipe else "") + ("Would push" if learn else "everkeep pushes")
+               + " the smallest mechanical fix to this branch, then the PR goes back through the rules. "
+               + after.get(c.get("after_fix") or "", "If no fix works, it goes to the maintainer's review list."))
     elif verdict == "escalate":
         headline = "Waiting for the maintainer's review."
         nxt = "Assigned to the maintainer and labelled needs-review." if not learn else \
