@@ -94,6 +94,14 @@ Write an entry the moment a real signal happens: a user correction, the same err
 - Scope: skill
 - Status: active · helpful 1 · harmful 0 · last_confirmed 2026-10-14
 
+### L-012 · 2026-10-14 · `public-text-the-model-shapes`: every public comment shows in the preview and matches the verdict
+- Trigger: the first eval run (T-20261014-1). Two of three outcome runs escalated owner/popular#5 against the table's merge-candidate; its comment then listed only "nothing risky in the lockfile diff" under "Waiting for the maintainer's review". The act dry run's `<plan>.comments.md` held verdict comments only, so a close comment (npm-lib#10) went unpreviewed.
+- Hypothesis: the preview was built for the verdict comment, and the verdict body assumed the verdict and the table's class agree.
+- Rule: act stores every public body it would post (verdict, post-merge update, close) for the preview; an escalation the model chose says in fixed text that the agent who read the diff sent it, since free text never goes public. Tests `test_human_close_needs_the_model_read_and_a_rule`, `test_escalation_the_model_chose_says_so`.
+- Evidence: evergreen-tester reports for outcome-1 runs 1 to 3, 2026-10-14
+- Scope: skill
+- Status: active · helpful 1 · harmful 0 · last_confirmed 2026-10-14
+
 <!-- Example (delete once you have a real entry):
 ### L-001 · 2026-10-13 · One-line lesson in plain words
 - Trigger: what happened, with dates or counts

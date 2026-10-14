@@ -73,6 +73,8 @@ def verdict_body(facts: dict, verdict: str, learn: bool, extra: str = "") -> str
                + after.get(c.get("after_fix") or "", "If no fix works, it goes to the maintainer's review list."))
     elif verdict == "escalate":
         headline = "Waiting for the maintainer's review."
+        if c.get("class") not in ("escalate", None):  # the model moved it: the reasons below are the rules' alone
+            headline += " The rules below would allow more, but the agent that read the diff sent it here."
         nxt = "Assigned to the maintainer and labelled needs-review." if not learn else \
             "Would assign the maintainer and add the needs-review label."
     elif verdict == "merge":

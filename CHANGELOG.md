@@ -8,6 +8,7 @@ Plugin versions. Reasoned changes to the skill are in `skills/everkeep/CHANGELOG
 - `deps` holds only the update types a dependabot.yml ignore names (majors only, say), not the whole package.
 - `gaps` recognises staged npm publishing (`npm stage publish`) and a size budget enforced by a tarball or size script.
 - `vulns` shows each Dependabot alert's scope (runtime or development).
+- The `act` dry run's comment preview now includes close comments; a PR the agent escalates against the rules says so in its comment.
 - Removed the unused provider methods `open_pr` and `rate_state`.
 - `keep.py enable`: switch on the security settings the maintainer allows without asking (D11), dry run unless `--apply`.
 - `act` without `--apply` writes the comments it would post, word for word, beside the plan (`<plan>.comments.md`).
