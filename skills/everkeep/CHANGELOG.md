@@ -4,6 +4,11 @@ Every change to [SKILL.md](SKILL.md) and its companions, newest first, each with
 
 Entry shape: `### C-YYYYMMDD-n · date · one-line summary`, then `because:` (IDs or "user request"), `files:` (file and section), and a sentence on what changed. Cite section headings, not line numbers.
 
+### C-20261014-4 · 2026-10-14 · First eval run: 9/9; preview and escalation wording fixed
+- because: T-20261014-1, L-012 `public-text-the-model-shapes`
+- files: SKILL.md (Step 1: only scope-taking commands exit 3), scripts/everkeep/act.py, verdict.py, evals/evals.json (baselines), TESTS.md
+- The act dry run previews close comments and the post-merge update too; a verdict comment for an escalation the agent chose says so in fixed text.
+
 ### C-20261014-3 · 2026-10-14 · Fixes from the seeded-random-utilities run (the last learning-only run)
 - because: L-003 `npm-audit-dev-only` (confirmed again), L-010 `dependabot-ignore-has-update-types`, L-011 `gaps-read-the-repos-own-gates`
 - files: scripts/everkeep/duties.py, gaps.py, cli.py, providers/base.py, providers/github.py

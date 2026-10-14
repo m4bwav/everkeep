@@ -81,6 +81,9 @@ class Act(EnvCase):
         body = next(w for w in self.provider().writes if w["kind"] == "comment")["body"]
         self.assertIn("unrequested refactors", body)
         self.assertNotIn("AI", body.split("<sub>")[0])  # a close never calls the PR AI-made
+        # the eval run of 2026-10-14: the dry run's preview lacked the close comment, the one public text it posts
+        res = self.run_plan([item("owner/npm-lib", 10, "1" * 40, "close", confirmed_by_reading=True, rule="no-churn")], apply=False)[0]
+        self.assertIn("unrequested refactors", res["comment"])
 
     def test_close_cap(self):
         self.write_config({"caps": {"closes_per_run": 0}})
@@ -115,6 +118,14 @@ class PublicText(unittest.TestCase):
         body = V.verdict_body(facts, "escalate", False)
         self.assertNotIn("please-merge", body)
         self.assertIn("touches executed config", body)
+
+    def test_escalation_the_model_chose_says_so(self):
+        # eval run 2026-10-14: a merge-candidate the agent escalated showed only the rules' merge reasons, a contradiction
+        facts = {"bot": {"bot": "dependabot"}, "tier": "low", "classification": {
+            "class": "merge-candidate", "hold_until": None, "reasons": ["green on the head SHA"]}}
+        self.assertIn("the agent that read the diff sent it here", V.verdict_body(facts, "escalate", False))
+        facts["classification"]["class"] = "escalate"
+        self.assertNotIn("the agent that read the diff", V.verdict_body(facts, "escalate", False))
 
 
     def test_fix_comment_names_the_known_fix_and_what_follows(self):

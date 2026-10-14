@@ -133,9 +133,11 @@ def execute(plan: dict, store, apply: bool, learn: bool | None = None, run: dict
                 if a.ok:
                     caps.merged[facts["repo"]] = caps.merged.get(facts["repo"], 0) + 1
                     if posted_before:
-                        actions.append(provider.upsert_marked_comment(rid, n, V.MARKER, V.verdict_body(facts, "merge", False), apply))
+                        res["comment"] = V.verdict_body(facts, "merge", False)
+                        actions.append(provider.upsert_marked_comment(rid, n, V.MARKER, res["comment"], apply))
             elif v == "close":
-                actions += provider.close(rid, n, V.close_body(facts, item.get("rule"), False), apply)
+                res["comment"] = V.close_body(facts, item.get("rule"), False)  # public text: previewed like the rest
+                actions += provider.close(rid, n, res["comment"], apply)
                 caps.closed += 1
         res["actions"] = [as_dict(a) for a in actions]
         if apply:

@@ -28,7 +28,7 @@ A thin judgment layer over tools that already do most of the work. The CLI gathe
 
 "Check my repos" with no more said means the current repo: do it, then offer to widen. Run `KEEP scope resolve <scope>` and show the list before doing anything else. `KEEP scope save NAME <scope>` stores a selection (as its filter, so new repos join it).
 
-A remote that is not GitHub makes every command exit 3 with "provider X isn't supported yet" and an issue link. Tell the user exactly that, with the link, and do nothing else. Never fall back to raw git or another tool to do the job anyway.
+A remote that is not GitHub makes every command that takes a scope exit 3 with "provider X isn't supported yet" and an issue link. Tell the user exactly that, with the link, and do nothing else. Never fall back to raw git or another tool to do the job anyway.
 
 ## Step 2: pull requests (the core duty)
 

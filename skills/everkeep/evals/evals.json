@@ -6,28 +6,40 @@
       "id": "trigger-1",
       "kind": "trigger",
       "prompt": "maintain this repo",
-      "expectations": ["the everkeep skill is invoked", "the scope stays the current repository (no --all, no --select)"],
+      "expectations": [
+        "the everkeep skill is invoked",
+        "the scope stays the current repository (no --all, no --select)"
+      ],
       "runs": 3
     },
     {
       "id": "trigger-2",
       "kind": "trigger",
       "prompt": "go through the dependabot PRs on my NuGet packages and merge whatever is safe",
-      "expectations": ["the everkeep skill is invoked", "the scope is a selection or ecosystem filter, not the whole account"],
+      "expectations": [
+        "the everkeep skill is invoked",
+        "the scope is a selection or ecosystem filter, not the whole account"
+      ],
       "runs": 3
     },
     {
       "id": "trigger-3",
       "kind": "trigger",
       "prompt": "maintain all my repos",
-      "expectations": ["the everkeep skill is invoked", "the scope is --all"],
+      "expectations": [
+        "the everkeep skill is invoked",
+        "the scope is --all"
+      ],
       "runs": 3
     },
     {
       "id": "trigger-4",
       "kind": "trigger",
       "prompt": "check my repos",
-      "expectations": ["the everkeep skill is invoked", "it starts with the current repository and offers to widen"],
+      "expectations": [
+        "the everkeep skill is invoked",
+        "it starts with the current repository and offers to widen"
+      ],
       "runs": 3
     },
     {
@@ -35,7 +47,9 @@
       "kind": "trigger",
       "decoy": true,
       "prompt": "modernize my NuGet library CachingServiceWithAOPSupport and get a 3.0 release ready",
-      "expectations": ["the everkeep skill is not invoked (package-modernize's job)"],
+      "expectations": [
+        "the everkeep skill is not invoked (package-modernize's job)"
+      ],
       "runs": 3
     },
     {
@@ -43,21 +57,31 @@
       "kind": "trigger",
       "decoy": true,
       "prompt": "what's new in agent skills this week?",
-      "expectations": ["the everkeep skill is not invoked (everscout's job)"],
+      "expectations": [
+        "the everkeep skill is not invoked (everscout's job)"
+      ],
       "runs": 3
     },
     {
       "id": "action-1",
       "kind": "action",
       "prompt": "Triage the open pull requests in owner/nuget-lib and show me what you would do. Don't change anything.",
-      "expectations": ["keep.py prs ran for owner/nuget-lib", "no act --apply ran", "the reply says #10 would merge and #13 would go to the maintainer"],
+      "expectations": [
+        "keep.py prs ran for owner/nuget-lib",
+        "no act --apply ran",
+        "the reply says #10 would merge and #13 would go to the maintainer"
+      ],
       "evidence": {
         "type": "trace",
         "tool": "Bash",
         "input_match": "keep\\.py\"?\\s+prs\\b.*nuget-lib",
-        "not": {"type": "trace", "tool": "Bash", "input_match": "act\\b.*--apply"}
+        "not": {
+          "type": "trace",
+          "tool": "Bash",
+          "input_match": "act\\b.*--apply"
+        }
       },
-      "baseline": "not yet run: without the skill a session would call gh directly and has no cooldown, lockfile or publisher check",
+      "baseline": "2026-10-14, T-20261014-1: matched the expected calls by reading the fixture JSON, but the prompt carried the expected answer by mistake; rerun clean",
       "runs": 3
     },
     {
@@ -65,14 +89,18 @@
       "kind": "action",
       "prompt": "maintain this repo",
       "setup": "a fresh git repository whose origin is https://gitlab.com/group/sub/project.git, as the working directory",
-      "expectations": ["keep.py ran and exited 3", "the reply says GitLab isn't supported yet and gives the issue link", "nothing else was attempted (no glab, no raw git push, no API calls)"],
+      "expectations": [
+        "keep.py ran and exited 3",
+        "the reply says GitLab isn't supported yet and gives the issue link",
+        "nothing else was attempted (no glab, no raw git push, no API calls)"
+      ],
       "evidence": {
         "type": "trace",
         "tool": "Bash",
         "input_match": "keep\\.py",
         "output_match": "isn't supported yet"
       },
-      "baseline": "not yet run",
+      "baseline": "2026-10-14, T-20261014-1: failed: said the repo is empty and asked what to do; no unsupported-host answer, no link",
       "runs": 3
     },
     {
@@ -86,8 +114,12 @@
         "the answer does not list nuget-lib#13 or nuget-lib#12 as merges (13 escalates for removed lockfile target sections, 12 needs a fix)",
         "a digest file exists under EVERKEEP_HOME/runs/*/digest.md"
       ],
-      "evidence": {"type": "file", "path": "$EVERKEEP_HOME/runs/*/digest.md"},
-      "runs": 3
+      "evidence": {
+        "type": "file",
+        "path": "$EVERKEEP_HOME/runs/*/digest.md"
+      },
+      "runs": 3,
+      "baseline": "2026-10-14, T-20261014-1: failed: held nuget-lib#10 (read the release-workflow rule literally); prompt carried the expected answer by mistake"
     }
   ]
 }
