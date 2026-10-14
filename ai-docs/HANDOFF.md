@@ -2,16 +2,15 @@
 
 Updated 2026-10-14.
 
-**Where things stand:** Phases 0 to 2 done; Phase 3 dry runs done (this repo, a three-repo selection, all 60 repos). On 2026-10-14 the first single-repo maintain run (IsImageUrlDotNet, every duty, learning mode) posted three verdict comments and found eight fixable problems, all fixed with tests (L-004 to L-008, changelog C-20261014-1). **Waiting for the maintainer** on: the all-repo digest (his state folder, `runs/20261014-030304-ehtv/digest.md`), and whether a new transitive package from the same publisher on a patch bump should keep escalating. Learning mode stays on until he agrees with a run.
+**Where things stand:** Phases 0 to 3 done. 2026-10-14: the first single-repo maintain run (IsImageUrlDotNet, learning mode) found eight bugs, fixed in PR #3 (merged). The maintainer then ruled: one more learning-only run (seeded-random-utilities), after which learning mode goes off; and new transitive packages escalate only with a danger signal (D14, not built yet).
 
-**Read first:** [log.md](log.md) (the last three entries), [plans/design.md](plans/design.md) section 13 (rollout), [../skills/everkeep/SKILL.md](../skills/everkeep/SKILL.md), [../skills/everkeep/LEARNINGS.md](../skills/everkeep/LEARNINGS.md). Adding a host: [plans/providers-roadmap.md](plans/providers-roadmap.md).
+**Read first:** [log.md](log.md) (the last four entries), [plans/design.md](plans/design.md) sections 12 (D14) and 13 (rollout), [../skills/everkeep/SKILL.md](../skills/everkeep/SKILL.md), [../skills/everkeep/LEARNINGS.md](../skills/everkeep/LEARNINGS.md).
 
 **Next, in order:**
-1. The maintainer's verdict on the digest and on the transitive-package question; fold corrections into `classify.py`, its tests and LEARNINGS.md.
-2. Another single-repo run on a different kind of repo (an npm package or a plugin), the same way: every duty, read `<plan>.comments.md` before `--apply --learn`. Each run so far found parser or detection bugs the all-repo run hid.
-3. The learning-mode shakedown (D13): `keep.py prs --all --plan plan.json`, read `plan.comments.md`, then `keep.py act plan.json --apply --learn`.
-4. Phase 4: apply on this repo, then `--select low-risk`, then all, once he agrees. High-tier repos always escalate. The NuGet lockfile fix (`nuget-lock-targets`) is verified and ready to push on IsImageUrlDotNet#17, CachingServiceWithAOPSupport#12 and (high tier, push but never merge) DotNetRandomNameGenerator#24.
-5. Phase 5: the eval suite (9 cases, `evergreen-test`), a wiki (wikiwright), the first release (tag and release need his go-ahead).
+1. Build D14 in `classify.py` with tests (trim first: the package is at 3,997 of 4,000 lines), PR, merge after green checks.
+2. The last learning-only run: seeded-random-utilities, every duty, read `<plan>.comments.md` before `act --apply --learn`; fix what it finds the same way.
+3. Set `"learn": false` in the overlay, then Phase 4: apply on this repo, then `--select low-risk`, then all. The verified NuGet lockfile fix goes on IsImageUrlDotNet#17, CachingServiceWithAOPSupport#12 and DotNetRandomNameGenerator#24 (high tier: push, never merge).
+4. Phase 5: the eval suite (9 cases, `evergreen-test`), a wiki (wikiwright), the first release (tag and release need his go-ahead).
 
 **Watch out for:**
 - `keep.py` package: 3,997 lines against a 4,000-line green budget. Trim before adding anything (`duties.research`, `github.merge`'s fallback, `prs.show`).
