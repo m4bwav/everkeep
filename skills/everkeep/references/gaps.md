@@ -16,6 +16,8 @@ Statuses: `ok`, `gap`, `unknown` (the host would not say), `n/a`. Report `unknow
 | switch on (D11) | `KEEP enable all <scope>` (dry run, then `--apply`; it refuses anything else), allowed without asking: Dependabot alerts and security updates, secret scanning and push protection, private vulnerability reporting, CodeQL default setup on public repos, the open-PR cap for users without write access |
 | ask first (D11) | rulesets, immutable releases, Actions policy, anything that switches a protection off: ask the user |
 | banner | an image-generation skill (ComfyUI or similar) when one is available (1536x640, `.github/images/banner.jpg`); otherwise it stays a gap |
+| discussions | public repos: `gh repo edit OWNER/REPO --enable-discussions`, allowed without asking (the maintainer asked for it on 2026-10-24); read back `hasDiscussionsEnabled` through `gh api graphql`. Not yet a row in the table: check it by hand when maintaining a public repo |
+| social preview | public repos with a banner: crop the centre 1280x640 of the banner to `.github/images/social-preview.jpg` (under 1 MB) and upload it at Settings, Social preview (no API; a browser tool if one is signed in, otherwise a step for the maintainer). `usesCustomOpenGraphImage` in `gh api graphql` reads whether it is set. No banner yet: make the banner first. Recipe: package-modernize `references/readme-images.md`. Not yet a row in the table |
 | wikiwright | hand over to the wikiwright skill |
 | package-modernize | a package missing a golden recording, a gated release, trusted publishing or a verify-published workflow: write a package-modernize kickoff prompt to the overlay's prompts folder instead of a fix |
 | manual | the size budget needs thresholds agreed with the maintainer |
