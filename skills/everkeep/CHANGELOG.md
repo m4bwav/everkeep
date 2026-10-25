@@ -4,6 +4,11 @@ Every change to [SKILL.md](SKILL.md) and its companions, newest first, each with
 
 Entry shape: `### C-YYYYMMDD-n · date · one-line summary`, then `because:` (IDs or "user request"), `files:` (file and section), and a sentence on what changed. Cite section headings, not line numbers.
 
+### C-20261024-1 · 2026-10-24 · Discussions and social preview rows in the gaps fix table
+- because: user request
+- files: references/gaps.md (Fixing)
+- Public repos get Discussions switched on without asking and a social preview cropped from the banner (upload is UI-only); both are notes for now, not rows keep.py checks.
+
 ### C-20261014-4 · 2026-10-14 · First eval run: 9/9; preview and escalation wording fixed
 - because: T-20261014-1, L-012 `public-text-the-model-shapes`
 - files: SKILL.md (Step 1: only scope-taking commands exit 3), scripts/everkeep/act.py, verdict.py, evals/evals.json (baselines), TESTS.md
