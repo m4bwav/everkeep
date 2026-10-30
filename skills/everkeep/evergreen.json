@@ -13,9 +13,9 @@
   "source": null,
   "topic": "Maintaining GitHub repositories and packages with an AI agent: PR triage of Dependabot/Renovate and human PRs, cooldowns and supply-chain signals (lockfile diffs, publisher changes, compromised versions), GitHub REST/gh behaviour (async merge, alerts, rulesets, PR caps, rate limits), vulnerability scanners (osv-scanner, npm audit, dotnet), toolchain EOL dates, AI-PR spam signals, other hosts (GitLab, Forgejo/Gitea, Bitbucket, Azure DevOps)",
   "tier": "fast",
-  "interval_days": 14,
-  "last_checked": "2026-10-13",
-  "next_due": "2026-10-27",
+  "interval_days": 17.5,
+  "last_checked": "2026-10-30",
+  "next_due": "2026-11-04",
   "verify_at_use": false,
   "volatile_claims": [
     "GitHub async merge PUT /pulls/{n}/merge-async with sha, GA 2026-10-01 (docs read 2026-10-13)",
@@ -43,7 +43,7 @@
     }
   ],
   "streak": {
-    "quiet": 0,
+    "quiet": 1,
     "pinned_min": 0,
     "pinned_max": 0,
     "vau_quiet": 0
@@ -54,12 +54,18 @@
       "m": null,
       "interval_after": 14,
       "note": "created"
+    },
+    {
+      "date": "2026-10-30",
+      "m": 0.0,
+      "interval_after": 17.5,
+      "note": "quiet check, nothing new since last_checked on any track; cost: searches 4 (shared across 5 units) · fetches 0 · tool calls 8"
     }
   ],
   "counts": {
     "learnings": 0,
     "changes": 0,
-    "research": 0,
+    "research": 1,
     "tests": 1
   },
   "consolidate_every": 25,
