@@ -61,6 +61,8 @@ Best sources (primary first): the GitHub changelog and REST docs, npm/NuGet/PyPI
 
 ## Findings log
 
+- R-20261030-1 (quiet check, all tracks): nothing newer since last_checked for everkeep; subject, tooling, practice, testing: nothing new. Sources: web searches (Claude Code changelog, arXiv agent memory, Dependabot changelog, npm compromises). m 0. applied: none.
+
 Newest first. One entry per material finding; a quiet refresh gets one entry saying so. `Track` is subject, tooling, practice, or testing.
 
 ### R-20261013-4 · 2026-10-13 · Testing: evidence lives outside the transcript
