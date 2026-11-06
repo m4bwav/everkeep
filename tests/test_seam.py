@@ -59,7 +59,7 @@ class Seam(EnvCase):
         self.assertEqual(code, 0, err)
         self.assertIn("| SECURITY.md | gap |", out)
         self.assertIn("actions/checkout@v4", out)
-        self.assertIn("2026-11-02", out)  # pull_request_target deadline
+        self.assertIn("2026-12-02", out)  # pull_request_target deadline
         self.assertIn("2026-11-01", out)  # NuGet key deadline
         self.assertIn("2026-11-10", out)  # net8.0
         code, out, err = keep("gaps", "--repo", "owner/npm-lib")

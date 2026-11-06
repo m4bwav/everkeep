@@ -13,9 +13,9 @@
   "source": null,
   "topic": "Maintaining GitHub repositories and packages with an AI agent: PR triage of Dependabot/Renovate and human PRs, cooldowns and supply-chain signals (lockfile diffs, publisher changes, compromised versions), GitHub REST/gh behaviour (async merge, alerts, rulesets, PR caps, rate limits), vulnerability scanners (osv-scanner, npm audit, dotnet), toolchain EOL dates, AI-PR spam signals, other hosts (GitLab, Forgejo/Gitea, Bitbucket, Azure DevOps)",
   "tier": "fast",
-  "interval_days": 17.5,
-  "last_checked": "2026-10-30",
-  "next_due": "2026-11-04",
+  "interval_days": 11.67,
+  "last_checked": "2026-11-05",
+  "next_due": "2026-11-13",
   "verify_at_use": false,
   "volatile_claims": [
     "GitHub async merge PUT /pulls/{n}/merge-async with sha, GA 2026-10-01 (docs read 2026-10-13)",
@@ -27,12 +27,7 @@
   "contradiction": null,
   "events": [
     {
-      "date": "2026-11-01",
-      "settle_days": 3,
-      "note": "NuGet API keys created before 2026-08-17 expire; check the gap and deadline wording"
-    },
-    {
-      "date": "2026-11-02",
+      "date": "2026-12-02",
       "settle_days": 3,
       "note": "pull_request_target blocked by default on public repos without an event policy; confirm the rollout and update gaps.md"
     },
@@ -43,7 +38,7 @@
     }
   ],
   "streak": {
-    "quiet": 1,
+    "quiet": 0,
     "pinned_min": 0,
     "pinned_max": 0,
     "vau_quiet": 0
@@ -60,12 +55,18 @@
       "m": 0.0,
       "interval_after": 17.5,
       "note": "quiet check, nothing new since last_checked on any track; cost: searches 4 (shared across 5 units) · fetches 0 · tool calls 8"
+    },
+    {
+      "date": "2026-11-05",
+      "m": 0.55,
+      "interval_after": 11.67,
+      "note": "pull_request_target moved to 12-02 with brownouts; NuGet fix PRs open; gh-aw GA; cost: searches 14 · fetches 25 · tool calls 43"
     }
   ],
   "counts": {
     "learnings": 0,
     "changes": 0,
-    "research": 1,
+    "research": 2,
     "tests": 1
   },
   "consolidate_every": 25,

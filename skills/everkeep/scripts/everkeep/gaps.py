@@ -14,7 +14,7 @@ from .util import EverkeepError, now, parse_time, run
 
 # (date, what, how to find it): listed at the top of the digest until they pass.
 DEADLINES = {
-    "pull_request_target": ("2026-11-02", "pull_request_target is blocked by default on public repos without an event policy"),
+    "pull_request_target": ("2026-12-02", "pull_request_target is blocked by default on public repos without an event policy (brownouts 2026-11-09 and 2026-11-16, 16:00-18:00 UTC)"),
     "nuget_key": ("2026-11-01", "NuGet API keys created before 2026-08-17 expire; publish through trusted publishing first"),
     "dotnet_8_9": ("2026-11-10", ".NET 8 and 9 reach end of support; move to .NET 10"),
     "unity_60": ("2026-10-31", "Unity 6.0 LTS support ends; move to Unity 6.3 LTS"),
