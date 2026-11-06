@@ -4,6 +4,11 @@ Every change to [SKILL.md](SKILL.md) and its companions, newest first, each with
 
 Entry shape: `### C-YYYYMMDD-n · date · one-line summary`, then `because:` (IDs or "user request"), `files:` (file and section), and a sentence on what changed. Cite section headings, not line numbers.
 
+### C-20261105-1 · 2026-11-05 · pull_request_target deadline moved to 2026-12-02; brownouts are not CI failures
+- because: R-20261105-1
+- files: scripts/everkeep/gaps.py, references/gaps.md (deadlines), references/prs.md (fixing step 3), tests/test_seam.py, evergreen.json (events), RESEARCH.md
+- The digest named the old date, and a brownout failure would have sent `fix` after a failure with nothing to fix.
+
 ### C-20261024-1 · 2026-10-24 · Discussions and social preview rows in the gaps fix table
 - because: user request
 - files: references/gaps.md (Fixing)

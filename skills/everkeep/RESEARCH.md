@@ -11,13 +11,17 @@ Topic: Maintaining GitHub repositories and packages with an AI agent: PR triage 
 - **Provenance is not safety.** TanStack, Miasma and IronWorm all published through the victim's own OIDC pipeline with valid attestations; a publisher change or a downgrade from trusted publishing is a signal, valid provenance clears nothing. High confidence.
 - **Dependabot's NuGet updater drops target sections.** On 2026-10-13 three PRs rewrote `packages.lock.json` without the `net48` and `win-x86` sections, failing locked restores; a lockfile check must flag removed targets, not only added packages (live snapshot, tests/fixtures). High confidence; watch for a Dependabot fix.
 - **GitHub API facts the adapter relies on:** async merge `PUT /pulls/{n}/merge-async` with `sha` (GA 2026-10-01; 202 then poll `details.uuid`; 409 another pending); withdrawn Dependabot alerts answer 410 (2026-10-13); archiving a PR is UI-only (2026-10-08); open-PR cap for users without write access is a repo setting; no account-wide alert listing for personal accounts; 5,000 REST requests an hour, content creation 80 a minute and 500 an hour, writes one at a time a second apart. High confidence (docs read 2026-10-13).
-- **Dated platform deadlines:** NuGet API keys made before 2026-08-17 expire 2026-11-01; `pull_request_target` blocked by default on public repos without an event policy from 2026-11-02; .NET 8 and 9 end 2026-11-10; Unity 6.0 LTS ends October 2026; node20 actions stopped 2026-09-23; npm 2FA-bypass tokens end January 2027. High confidence; recheck each refresh.
+- **Dated platform deadlines:** NuGet API keys made before 2026-08-17 expire 2026-11-01; `pull_request_target` blocked by default on public repos without an event policy from 2026-12-02 (moved from 11-02; brownouts 11-09 and 11-16); .NET 8 and 9 end 2026-11-10; Unity 6.0 LTS ends October 2026; node20 actions stopped 2026-09-23; npm 2FA-bypass tokens end January 2027. High confidence; recheck each refresh.
 - **Slop handling:** maintainers chose platform controls (PR caps, collaborators-only, Vouch lists, CONTRIBUTING-based rules) over detection; anti-slop's scoring has documented false positives (digits in usernames, URL counts, maintainer "Update branch" commits). Close only on several signals including a content signal, from the owner's login so it can be reopened, citing a written rule. Medium-high confidence.
 - **Headless runs are dangerous inside a repo:** `claude -p` shows no trust dialog and runs the repo's hooks and `.mcp.json` servers; a scheduled run must start outside any repo with hooks off, no MCP, a narrow tool allow-list. Medium confidence on the exact flags (they change between releases).
 - **Tooling:** no published "maintain all my repos" agent by a solo developer was found; closest are gh-aw's `repo-assist` (one repo per workflow) and multi-gitter, turbolift and all-repos (frozen list, dry run, one branch per campaign, resumable), whose shape the run engine copies. `keepwright` (a Claude Code skill for repo quality) exists and overlaps in name only.
 
 ## Open questions
 
+- Did NuGet enforce the 2026-11-01 key expiry as scheduled? A real publish would settle it.
+- Does gh-aw GA still mean one repo per workflow?
+- How should everkeep classify Dependabot PRs for Agent Package Manager git dependencies (may trip the git-source rule)? `classify.py` not yet read against them.
+- Does dry run make no write on every path, including `fix` pushes and `enable`? Candidate eval (R-20261105-4).
 - Whether GitHub's Dependabot NuGet updater fixes the dropped-target-section bug (issue to find and watch).
 - CodeRabbit slop detection on the free public tier (docs say yes, pricing page says paid).
 - The exact `claude -p` flag set for a locked-down run (`--tools`, `--setting-sources`, `disableAllHooks`): test before any schedule.
@@ -34,7 +38,7 @@ Subject:
 - `dependabot nuget "packages.lock.json" target framework removed` (the dropped-section bug)
 - `site:docs.github.com rest pulls merge-async` and `rest "interaction-limits" creation-cap`
 - `endoflife.date/api/v1/products/nodejs/`, `/dotnet/`, `/unity/` (dates in references/deps.md and gaps.md)
-- `pull_request_target "event policy" 2026-11-02`
+- `pull_request_target "event policy" December 2`; read github.blog/changelog/ and /changelog/month/ first, they beat `site:` search; issue search `repo:dependabot/dependabot-core nuget "packages.lock.json" created:>DATE`; GitHub Community Discussions through the site's own discussion search; githubnext/agentics
 
 Tooling:
 
@@ -64,6 +68,22 @@ Best sources (primary first): the GitHub changelog and REST docs, npm/NuGet/PyPI
 - R-20261030-1 (quiet check, all tracks): nothing newer since last_checked for everkeep; subject, tooling, practice, testing: nothing new. Sources: web searches (Claude Code changelog, arXiv agent memory, Dependabot changelog, npm compromises). m 0. applied: none.
 
 Newest first. One entry per material finding; a quiet refresh gets one entry saying so. `Track` is subject, tooling, practice, or testing.
+
+### R-20261105-4 · 2026-11-05 · Testing: gh-aw staged mode is not a sandbox
+- track: testing · magnitude 0.3 · applied: open question only
+- Custom safe-output jobs run unless their own code checks `GH_AW_SAFE_OUTPUTS_STAGED`. Idea for everkeep: prove dry run makes no write on every path. https://github.github.com/gh-aw/reference/staged-mode/
+
+### R-20261105-3 · 2026-11-05 · Tooling: gh-aw GA, thoughtbot review skill; practice quiet
+- track: tooling · magnitude 0.35 · applied: note
+- GitHub Agentic Workflows GA 2026-10-28 (the default engine needs a Copilot licence); v1.2.0 prerelease needs opt-in for `pull_request_target` on fork PRs. thoughtbot/dependabot-review-skill-thoughtbot (5 stars) is the closest comparable, narrower than everkeep, no visible evals. Practice: no dated case study found. https://github.blog/changelog/2026-10-28-github-agentic-workflows-generally-available · https://github.com/thoughtbot/dependabot-review-skill-thoughtbot
+
+### R-20261105-2 · 2026-11-05 · Subject: Dependabot NuGet fixes open; APM support; reachability preview
+- track: subject · magnitude 0.3 · applied: open question; lockfile check stays
+- dependabot-core #16836 and draft #16837 target the dropped-framework bug, unmerged and not shown to cover `win-x86`. #16636 (unreviewed): `RestoreLockedMode` repos can lose updates silently, so no bot PR does not prove a package is current. Dependabot now updates Agent Package Manager git dependencies (2026-11-03). Alert reachability preview: JS/TS, listed for Enterprise Cloud. Dates rechecked: .NET 8/9 end 2026-11-10; Unity 6.0 LTS security support ended 2026-10-16. Search coverage of new supply-chain attacks stopped around August: a gap, not evidence of calm. https://github.com/dependabot/dependabot-core/pull/16836 · https://github.com/dependabot/dependabot-core/pull/16636 · https://github.blog/changelog/2026-11-03-dependabot-version-updates-support-agent-package-manager
+
+### R-20261105-1 · 2026-11-05 · Subject: pull_request_target block moved to December 2
+- track: subject · magnitude 0.55 · applied: C-20261105-1
+- Public repos only; brownouts 2026-11-09 and 2026-11-16, 16:00 to 18:00 UTC, when blocked attempts create failed runs. Evaluate mode until then. https://github.blog/changelog/2026-11-02-pull_request_target-blocked-by-default-december-2
 
 ### R-20261013-4 · 2026-10-13 · Testing: evidence lives outside the transcript
 - Summary: gh-aw's staged mode and the sweep tools' dry runs show the accepted proof shape: a run file and a digest on disk, and on a host, a label or comment that can be read back. everkeep's action cases use the run file, the digest and the fake adapter's recorded writes; live cases use a verdict comment's hidden marker.

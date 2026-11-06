@@ -31,7 +31,7 @@ Listed at the top of the digest until they pass:
 | Date | What |
 |---|---|
 | 2026-11-01 | NuGet API keys created before 2026-08-17 expire: a repo still publishing with a stored key needs trusted publishing first |
-| 2026-11-02 | `pull_request_target` blocked by default on public repos without an event policy: list each workflow using it and escalate |
+| 2026-12-02 | `pull_request_target` blocked by default on public repos without an event policy: list each workflow using it and escalate. Brownouts 2026-11-09 and 2026-11-16, 16:00 to 18:00 UTC: the workflows do not run and the attempt shows as a failed run |
 | 2026-11-10 | .NET 8 and 9 end of support |
 | 2026-10-31 | Unity 6.0 LTS ends |
 | January 2027 | npm stops accepting tokens that bypass 2FA |
