@@ -24,6 +24,7 @@ LOCKFILES = {
     "composer.lock": "composer",
     "Gemfile.lock": "bundler",
     "go.sum": "go",
+    "apm.lock.yaml": "apm",
 }
 DEFAULT_REGISTRIES = ("https://registry.npmjs.org/",)
 UPM_REGISTRIES = ("https://packages.unity.com", "https://package.openupm.com")

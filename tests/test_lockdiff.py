@@ -98,6 +98,10 @@ class LockDiff(unittest.TestCase):
         self.assertFalse(d.clean)
         self.assertIn("not analysed", d.reasons[0])
 
+    def test_apm_lockfile_is_never_clean(self):
+        r = lockdiff.analyse("diff --git a/apm.lock.yaml b/apm.lock.yaml\n--- a/apm.lock.yaml\n+++ b/apm.lock.yaml\n@@ -1 +1 @@\n-a\n+b\n")
+        self.assertFalse(r.clean)
+
     def test_non_lockfiles_are_ignored(self):
         self.assertTrue(lockdiff.analyse(read("action-pin-first-party.diff")).clean)
 

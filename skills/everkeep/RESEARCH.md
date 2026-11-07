@@ -20,7 +20,7 @@ Topic: Maintaining GitHub repositories and packages with an AI agent: PR triage 
 
 - Did NuGet enforce the 2026-11-01 key expiry as scheduled? A real publish would settle it.
 - Does gh-aw GA still mean one repo per workflow?
-- How should everkeep classify Dependabot PRs for Agent Package Manager git dependencies (may trip the git-source rule)? `classify.py` not yet read against them.
+- (resolved 2026-11-07) Agent Package Manager PRs: they never reached the git-source rule, since `apm.lock.yaml` was not a known lockfile; they escalated only through the failed publish-time lookup. Both files are now executed config, so they always escalate. No real `apm` Dependabot PR has been run through it. classmethod.jp's test reports SemVer-tag rewrites and a 3-day hold; one author, not relied on.
 - Does dry run make no write on every path, including `fix` pushes and `enable`? Candidate eval (R-20261105-4).
 - Whether GitHub's Dependabot NuGet updater fixes the dropped-target-section bug (issue to find and watch).
 - CodeRabbit slop detection on the free public tier (docs say yes, pricing page says paid).
