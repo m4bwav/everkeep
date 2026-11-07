@@ -22,7 +22,8 @@ EXECUTED = [r"^\.github/workflows/", r"^\.github/actions/", r"(^|/)action\.ya?ml
             r"(^|/)\.gitlab-ci\.yml$", r"(^|/)bitbucket-pipelines\.yml$", r"(^|/)azure-pipelines", r"^\.forgejo/",
             r"^\.gitea/", r"^\.woodpecker", r"(^|/)binding\.gyp$", r"(^|/)Dockerfile", r"(^|/)\.releaserc",
             r"(^|/)release\.config\.", r"(^|/)nuget\.config$", r"(^|/)copilot-instructions\.md$",
-            r"(^|/)\.goreleaser", r"(^|/)Makefile$", r"(^|/)\.pre-commit-config\.yaml$"]
+            r"(^|/)\.goreleaser", r"(^|/)Makefile$", r"(^|/)\.pre-commit-config\.yaml$",
+            r"(^|/)apm\.ya?ml$", r"(^|/)apm\.lock\.yaml$"]  # Agent Package Manager: installs instructions agents follow
 DOCS = [r"\.(md|markdown|txt|rst|adoc)$", r"^docs/", r"(^|/)LICENSE", r"^\.github/images/"]
 FIRST_PARTY_ACTIONS = {"actions", "github"}
 _PIN = re.compile(r"^\s*-?\s*uses:\s*([\w.-]+)/([\w.-]+)(/[^@\s]*)?@([0-9a-f]{40})\s*#\s*v?([\w.+-]+)\s*$")

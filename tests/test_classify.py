@@ -80,7 +80,8 @@ class Pure(unittest.TestCase):
 
     def test_executed_config_and_docs(self):
         for p in (".github/workflows/ci.yml", ".mcp.json", ".claude/settings.json", ".vscode/tasks.json", "AGENTS.md",
-                  "sub/CLAUDE.md", ".husky/pre-commit", ".npmrc", "nuget.config", "binding.gyp", ".github/dependabot.yml"):
+                  "sub/CLAUDE.md", ".husky/pre-commit", ".npmrc", "nuget.config", "binding.gyp", ".github/dependabot.yml",
+                  "apm.yml", "sub/apm.lock.yaml"):
             self.assertTrue(C.is_executed(p), p)
         self.assertTrue(C.is_docs("README.md"))
         self.assertTrue(C.is_docs("docs/guide/intro.md"))

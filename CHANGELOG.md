@@ -4,6 +4,7 @@ Plugin versions. Reasoned changes to the skill are in `skills/everkeep/CHANGELOG
 
 ## Unreleased
 
+- Dependabot's Agent Package Manager PRs always escalate: `apm.yml` and `apm.lock.yaml` count as executed config, because those packages install instructions agents follow. Before, they escalated only because the publish time could not be looked up.
 - A lockfile adding a package no longer escalates on its own (decision D14): it escalates only when the new package shares no owner with the packages the same update moves, was first published under 90 days ago, is missing from its registry, has a name one edit from a popular or bumped package, or is a known-compromised version. Otherwise the verdict comment names it as a reason.
 - `deps` holds only the update types a dependabot.yml ignore names (majors only, say), not the whole package.
 - `gaps` recognises staged npm publishing (`npm stage publish`) and a size budget enforced by a tarball or size script.
