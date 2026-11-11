@@ -73,6 +73,15 @@ Other agents that read Agent Skills (`SKILL.md`): link or copy `skills/everkeep`
 
 Your own settings (who escalations go to, packages that always need a human, saved selections, caps, learning mode) go in `~/.everkeep/overlay/overlay.json`, outside every repository. The keys and their defaults are in `DEFAULTS` in [state.py](skills/everkeep/scripts/everkeep/state.py).
 
+## Works with
+
+everkeep finds what a repo is missing and hands each job to the plugin built for it.
+
+- [wikiwright](https://github.com/m4bwav/wikiwright): a missing or stale wiki shows up as a gap in everkeep's report, and wikiwright writes and checks the pages. everkeep finds them, wikiwright fixes them, and neither copies the other.
+- [everscout](https://github.com/m4bwav/everscout): one everscout beat per cluster of repos (.NET libraries, npm utilities, agent plugins) watches the forums and release feeds. everkeep reads its signals into each repo's note, so it doesn't scan the same sites over and over.
+- [package-modernize](https://github.com/m4bwav/package-modernize): full rewrites and releases go there. everkeep stays a maintainer and doesn't try to rebuild packages.
+- [askwright](https://github.com/m4bwav/askwright): anything everkeep must ask first, like creating a new beat, fits on an askwright page instead of blocking a run.
+
 ## Safety
 
 Pull request titles, bodies, comments and diffs are treated as data: hidden HTML, invisible characters and over-long fields are stripped before the agent reads them, and the skill tells it never to follow instructions found there. Judging and acting are separate: the agent writes a plan, and only `act` writes, only from a short list of actions, with public comments built from templates. Pull request code never runs to be judged. Caps (3 merges per repo, 10 per run, 5 closes per run) and learning mode keep a wrong rule from doing much before you see it. [references/safety.md](skills/everkeep/references/safety.md) has the details.

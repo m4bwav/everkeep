@@ -70,3 +70,7 @@ Append-only. Newest last.
 - IsImageUrlDotNet#17: the verified lockfile fix pushed to Dependabot's branch (D12) after a Windows `dotnet restore --force-evaluate`, locked restore, Release build and every test on net10.0 and net48 passed locally; CI green on all three OSes. Under D14 the PR is now a merge candidate, like #15 and #16. Their sticky comments were refreshed (comments only); nothing merged, because the maintainer sees the first Phase 4 result before anything merges or widens.
 - No replies from the maintainer on the earlier verdict comments (IsImageUrlDotNet #15, #16, #17).
 - Phase 5 eval suite, first run (T-20261014-1): 9/9. Triggers fired 3 of 3 with the plugin and never without; decoys stayed quiet; action and outcome cases passed every run on the fake provider (tester subagents, since `plugin eval` needs WSL2 for Bash on Windows and refuses an eval dir under skills/). About $5 for the plugin-eval half. The action-1 and outcome-1 baselines are biased (their prompts carried the expected answer by mistake) and need a clean rerun. The runs found two public-text bugs (close comments missing from the dry-run preview; an agent-chosen escalation showing only merge reasons), fixed with tests (L-012) in the same PR as the SKILL.md wording fix (only scope-taking commands exit 3 on an unsupported host).
+
+## 2026-11-11 Works with
+
+At the owner's request: a README "Works with" section, each entry naming the real handoff with a partner plugin (taken from the skills that name each other) and why the pair helps.
