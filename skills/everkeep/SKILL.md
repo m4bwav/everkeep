@@ -64,7 +64,7 @@ A missing scanner, a capability the host lacks, or a missing sibling plugin is p
 
 ## Step 5: the digest
 
-`KEEP report <id>` (or `latest`) writes `~/.everkeep/runs/<id>/digest.md`: merged, closed, bump candidates, fixes, what waits for the maintainer, held, refused, vulnerabilities, gaps, knowledge base, not checked, and dated deadlines at the top. Give the user its path and say plainly which PRs wait for them, with URLs. For a single repo without a run, summarise act's table the same way.
+`KEEP report <id>` (or `latest`) writes `~/.everkeep/runs/<id>/digest.md`: merged, closed, bump candidates, fixes, what waits for the maintainer, held, refused, vulnerabilities, gaps, delivery numbers per repo (never a ranking), knowledge base, not checked, and dated deadlines and a red default branch at the top. Give the user its path and say plainly which PRs wait for them, with URLs. For a single repo without a run, summarise act's table the same way.
 
 ## Rules that never loosen
 

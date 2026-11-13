@@ -4,6 +4,11 @@ Every change to [SKILL.md](SKILL.md) and its companions, newest first, each with
 
 Entry shape: `### C-YYYYMMDD-n · date · one-line summary`, then `because:` (IDs or "user request"), `files:` (file and section), and a sentence on what changed. Cite section headings, not line numbers.
 
+### C-20261113-1 · 2026-11-13 · Delivery numbers, red default branch, flaky checks and stale branches
+- because: R-20261113-1
+- files: scripts/everkeep/delivery.py (new), gaps.py, report.py, cli.py, providers/base.py, github.py, fake.py, references/gaps.md (Delivery numbers), SKILL.md (Step 5), tests/test_delivery.py
+- Report only, one repo at a time, no thresholds. Tried read-only on four real repos: PR medians of minutes, fix-release shares from 0/5 to 26/29, flaky workflows in two repos, no stale branches.
+
 ### C-20261105-1 · 2026-11-05 · pull_request_target deadline moved to 2026-12-02; brownouts are not CI failures
 - because: R-20261105-1
 - files: scripts/everkeep/gaps.py, references/gaps.md (deadlines), references/prs.md (fixing step 3), tests/test_seam.py, evergreen.json (events), RESEARCH.md

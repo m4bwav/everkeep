@@ -11,6 +11,7 @@ from pathlib import Path
 from . import VERSION
 from . import act as A
 from . import duties as D
+from . import delivery as D
 from . import gaps as G
 from . import prs as P
 from . import report as REP
@@ -125,6 +126,8 @@ def cmd_gaps(args, store):
         if g.get("error"):
             return f"## {g['repo']}\n\nnot checked: {g['error']}"
         md = f"## {g['repo']}\n\n" + md_table(["gap", "status", "detail", "fix"], [[x["gap"], x["status"], x["detail"], x["fix"]] for x in g["gaps"]])
+        if g.get("delivery"):
+            md += "\n\nDelivery: " + D.line(g["delivery"])
         if g["deadlines"]:
             md += "\n\nDeadlines:\n" + "\n".join(f"- {d['date']}: {d['what']} ({d['where']})" for d in g["deadlines"])
         if g["not_checked"]:

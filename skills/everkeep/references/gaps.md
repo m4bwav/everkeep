@@ -24,6 +24,10 @@ Statuses: `ok`, `gap`, `unknown` (the host would not say), `n/a`. Report `unknow
 
 `--deep` also runs package-modernize's `topics.py check` and `lint-workflows.sh` (actionlint, shellcheck, zizmor) on the local clone; without package-modernize installed it says "not checked".
 
+## Delivery numbers
+
+`gaps` also prints one line per repo, and the digest a section and a "main red since" block at its top: median PR open-to-merge time over the last 50 merged PRs; when the default branch went red (the oldest failure in the current failing streak of any workflow); days since the last release and commits since it; how many releases were followed within 3 days by a patch release of the same minor; flaky checks (a workflow that failed and then passed on one commit, a passing re-run included). Each repo stands alone: no ranking, no target bands. The stale-branches row lists non-default branches with no open PR and no commit for 90 days (`stale_branch_days` in config), bot branches (`dependabot/`, `renovate/`) excluded. Report only: everkeep never deletes a branch.
+
 ## Dated deadlines
 
 Listed at the top of the digest until they pass:

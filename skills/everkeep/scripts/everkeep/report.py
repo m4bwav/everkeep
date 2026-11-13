@@ -3,6 +3,7 @@ A dry run's digest has the same sections in the conditional ("Would merge")."""
 
 from __future__ import annotations
 
+from .delivery import line as delivery_line
 from .prs import title_cell
 from .runs import summary
 from .util import atomic_write, collapse_reasons, read_json
@@ -36,6 +37,7 @@ def build(run: dict, store, reviewer: str | None = None) -> str:
     refused, kb_lines, vuln_lines, deadlines, failed = [], [], [], {}, []
     not_checked: dict[str, list[str]] = {}  # message -> repos, so 60 repos missing one tool make one line
     gaps_by: dict[str, list[str]] = {}
+    deliv_lines, red = [], []
 
     def nc(repo: str, items) -> None:
         for x in items:
@@ -78,6 +80,10 @@ def build(run: dict, store, reviewer: str | None = None) -> str:
             for x in g.get("gaps", []):
                 if x["status"] == "gap":
                     gaps_by.setdefault(x["gap"], []).append(facts["repo"].split(":", 1)[-1])
+            if g.get("delivery"):
+                deliv_lines.append(f"- {facts['repo']}: {delivery_line(g['delivery'])}")
+                if g["delivery"].get("red_since"):
+                    red.append(f"- {facts['repo']}: main red since {g['delivery']['red_since']}")
             for dl in g.get("deadlines", []):
                 deadlines.setdefault((dl["date"], dl["what"]), []).append(f"{facts['repo']} ({dl['where']})")
         k = d.get("kb")
@@ -101,6 +107,8 @@ def build(run: dict, store, reviewer: str | None = None) -> str:
         out += ["", "## Stopped widening", "",
                 f"At {s['repo']}: {s['finding']}. The remaining repos are held until the maintainer has looked; "
                 f"`keep.py run resume {run['id']} --release-held` carries on."]
+    if red:
+        out += ["", "## Default branch red", ""] + red
     if deadlines:
         out += ["", "## Deadlines", ""]
         for (date, what), where in sorted(deadlines.items()):
@@ -121,6 +129,8 @@ def build(run: dict, store, reviewer: str | None = None) -> str:
     if gaps_by:
         out += ["", "### Modernization gaps (per gap, most repos first)", ""]
         out += [f"- {gap} ({len(repos)}): {_names(repos)}" for gap, repos in sorted(gaps_by.items(), key=lambda kv: -len(kv[1]))]
+    if deliv_lines:
+        out += ["", "### Delivery numbers (each repo on its own; not a ranking)", ""] + deliv_lines
     if kb_lines:
         out += ["", "### Knowledge base", ""] + kb_lines
     if not_checked:
