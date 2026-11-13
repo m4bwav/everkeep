@@ -2,7 +2,7 @@
 name: everkeep
 description: "Keep the repositories and packages the user already owns healthy: one repo by default, a saved selection, or the whole account. Triages open pull requests (merges safe bot bumps past a cooldown, fixes failing ones, closes spam, escalates the rest), vulnerabilities, outdated dependencies and toolchains, modernization gaps, knowledge bases and ecosystem notes, through a stdlib CLI that is a dry run until --apply. GitHub only. Use on 'maintain this repo', 'triage my PRs', 'merge the Dependabot PRs', 'check my repos', 'maintain all my repos', 'refresh everkeep'. Not for modernizing or rewriting one package (package-modernize) or watching a subject (everscout)."
 metadata:
-  version: "0.1.0"
+  version: "0.2.0"
 ---
 
 # everkeep
