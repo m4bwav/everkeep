@@ -74,3 +74,7 @@ Append-only. Newest last.
 ## 2026-11-11 Works with
 
 At the owner's request: a README "Works with" section, each entry naming the real handoff with a partner plugin (taken from the skills that name each other) and why the pair helps.
+
+## 2026-11-13 Release 0.2.0
+
+Mark approved: tagged and released v0.2.0 (delivery numbers, red default branch, stale branches, flaky checks, APM escalation, D14). AGENTS.md no longer needs his go-ahead to tag and release.
