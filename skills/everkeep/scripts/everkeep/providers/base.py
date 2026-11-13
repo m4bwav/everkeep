@@ -286,6 +286,12 @@ class Provider:
     def run_logs(self, repo: RepoId, check_url: str) -> str:
         raise NotImplementedError
 
+    def delivery(self, repo: RepoId, branch: str) -> dict:
+        """Raw delivery facts for delivery.compute: merged_prs [(created, merged)], runs [{workflow, sha, branch,
+        conclusion, created, attempt}], releases [(tag, published)], unreleased_commits, branches [(name, date)],
+        open_pr_heads, default_branch. Read only."""
+        raise Unsupported(f"{self.name}: delivery numbers not supported yet")
+
 
 def as_dict(obj: Any) -> Any:
     if hasattr(obj, "to_dict"):

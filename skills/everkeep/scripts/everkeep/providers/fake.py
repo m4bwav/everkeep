@@ -145,6 +145,12 @@ class FakeProvider(Provider):
     def run_logs(self, repo, check_url):
         return self.data.get("logs", {}).get(check_url, "")
 
+    def delivery(self, repo, branch):
+        d = self._r(repo).get("delivery")
+        if d is None:
+            raise Unsupported(f"fake: no delivery facts for {repo}")
+        return {"default_branch": branch, **d}
+
     # writes
     def upsert_marked_comment(self, repo, number, marker, body, apply):
         p = self._pr(repo, number)

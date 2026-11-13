@@ -69,6 +69,10 @@ Best sources (primary first): the GitHub changelog and REST docs, npm/NuGet/PyPI
 
 Newest first. One entry per material finding; a quiet refresh gets one entry saying so. `Track` is subject, tooling, practice, or testing.
 
+### R-20261113-1 · 2026-11-13 · Book: Accelerate (Forsgren, Humble, Kim, 2018)
+- Lead time, how long a broken main stays broken, release cadence and the rate of follow-up fixes are the delivery measures worth watching; flaky checks and long-lived branches slow them. Adopted as plain per-repo numbers. The book's performance bands come from a 2014-17 company survey and are not carried: a solo maintainer's repos are not that population. Book rule, unverified for this setting: no check here shows these numbers predict anything for one-person repos.
+- Not built (notes): change against the previous run's numbers; a note on human PRs open for long.
+
 ### R-20261105-4 · 2026-11-05 · Testing: gh-aw staged mode is not a sandbox
 - track: testing · magnitude 0.3 · applied: open question only
 - Custom safe-output jobs run unless their own code checks `GH_AW_SAFE_OUTPUTS_STAGED`. Idea for everkeep: prove dry run makes no write on every path. https://github.github.com/gh-aw/reference/staged-mode/

@@ -404,6 +404,29 @@ class GitHubProvider(Provider):
 
     # ------------------------------------------------------------ writes
 
+    def delivery(self, repo, branch):
+        r = repo.path
+        prs = self._try(lambda: self.api(f"repos/{r}/pulls?state=closed&per_page=50",
+                                         jq='.[] | select(.merged_at != null) | [.created_at, .merged_at] | tojson'), []) or []
+        runs = self._try(lambda: self.api(f"repos/{r}/actions/runs?per_page=100", jq=".workflow_runs[] | {workflow: .name, "
+                                          "sha: .head_sha, branch: .head_branch, conclusion, created: .created_at, "
+                                          "attempt: .run_attempt} | tojson"), []) or []
+        rels = self._try(lambda: self.api(f"repos/{r}/releases?per_page=30",
+                                          jq='.[] | select(.draft | not) | [.tag_name, .published_at] | tojson'), []) or []
+        ahead = None
+        if rels:
+            latest = max(rels, key=lambda x: x[1] or "")[0]
+            ahead = self._try(lambda: self.api(f"repos/{r}/compare/{latest}...{branch}", jq=".ahead_by"))
+        heads = self._try(lambda: self.api(f"repos/{r}/pulls?state=open&per_page=100", jq=".[].head.ref | tojson"), []) or []
+        names = self._try(lambda: self.api(f"repos/{r}/branches?per_page=100", jq=".[].name | tojson"), []) or []
+        branches = []
+        for n in [x for x in names if x != branch and x not in heads and not x.startswith(("dependabot/", "renovate/"))][:20]:
+            t = self._try(lambda: self.api(f"repos/{r}/commits/{n}", jq=".commit.committer.date"))
+            branches.append((n, str(t).strip() if t else None))
+        return {"default_branch": branch, "merged_prs": prs, "runs": runs, "releases": rels,
+                "unreleased_commits": int(ahead) if ahead is not None else None, "branches": branches,
+                "open_pr_heads": heads}
+
     def upsert_marked_comment(self, repo, number, marker, body, apply):
         me = self.whoami()
         comments = self.api(f"repos/{repo.path}/issues/{number}/comments?per_page=100", paginate=True,

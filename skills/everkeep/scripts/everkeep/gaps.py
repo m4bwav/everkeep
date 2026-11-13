@@ -9,6 +9,7 @@ import os
 import re
 from pathlib import Path
 
+from . import delivery as D
 from .providers.registry import get_provider
 from .util import EverkeepError, now, parse_time, run
 
@@ -175,9 +176,16 @@ def audit(entry: dict, store, deep: bool = False) -> dict:
             else:
                 not_checked.append("workflow lint: no local clone (config clones or clone_roots)")
     today = now()
+    deliv = None
+    try:
+        deliv = D.compute(p.delivery(repo.id, repo.default_branch), today, int(cfg.get("stale_branch_days", 90)))
+        sb = deliv["stale_branches"]
+        row("stale branches (report only, never deleted)", "gap" if sb else "ok", ", ".join(sb[:6]), "manual")
+    except EverkeepError as e:
+        not_checked.append(f"delivery numbers: {e}")
     dl = []
     for key, where in deadlines:
         date, what = DEADLINES[key]
         passed = parse_time(date) < today
         dl.append({"key": key, "date": date, "what": what, "where": where, "passed": passed})
-    return {"repo": entry["id"], "gaps": rows, "deadlines": dl, "not_checked": not_checked}
+    return {"repo": entry["id"], "gaps": rows, "deadlines": dl, "not_checked": not_checked, "delivery": deliv}
