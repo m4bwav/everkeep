@@ -14,8 +14,8 @@
   "topic": "Maintaining GitHub repositories and packages with an AI agent: PR triage of Dependabot/Renovate and human PRs, cooldowns and supply-chain signals (lockfile diffs, publisher changes, compromised versions), GitHub REST/gh behaviour (async merge, alerts, rulesets, PR caps, rate limits), vulnerability scanners (osv-scanner, npm audit, dotnet), toolchain EOL dates, AI-PR spam signals, other hosts (GitLab, Forgejo/Gitea, Bitbucket, Azure DevOps)",
   "tier": "fast",
   "interval_days": 11.67,
-  "last_checked": "2026-11-05",
-  "next_due": "2026-11-13",
+  "last_checked": "2026-11-15",
+  "next_due": "2026-11-27",
   "verify_at_use": false,
   "volatile_claims": [
     "GitHub async merge PUT /pulls/{n}/merge-async with sha, GA 2026-10-01 (docs read 2026-10-13)",
@@ -30,11 +30,6 @@
       "date": "2026-12-02",
       "settle_days": 3,
       "note": "pull_request_target blocked by default on public repos without an event policy; confirm the rollout and update gaps.md"
-    },
-    {
-      "date": "2026-11-10",
-      "settle_days": 3,
-      "note": ".NET 8 and 9 end of support; move the deadline row to passed"
     }
   ],
   "streak": {
@@ -61,12 +56,18 @@
       "m": 0.55,
       "interval_after": 11.67,
       "note": "pull_request_target moved to 12-02 with brownouts; NuGet fix PRs open; gh-aw GA; cost: searches 14 · fetches 25 · tool calls 43"
+    },
+    {
+      "date": "2026-11-15",
+      "m": 0.2,
+      "interval_after": 11.67,
+      "note": "minor: Dependabot version updates support APM (apm.yml), 2026-11-04 changelog; cost: searches 1 · fetches 0 · tool calls 1"
     }
   ],
   "counts": {
     "learnings": 0,
     "changes": 0,
-    "research": 2,
+    "research": 3,
     "tests": 1
   },
   "consolidate_every": 25,
