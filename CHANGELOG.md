@@ -2,6 +2,10 @@
 
 Plugin versions. Reasoned changes to the skill are in `skills/everkeep/CHANGELOG.md`.
 
+## 0.3.0 (2026-11-21)
+
+- `classify`: a bot PR whose release notes announce a breaking change (a `BREAKING CHANGE` footer or a "Breaking changes" heading) escalates even when the version bump is below major.
+
 ## 0.2.0 (2026-11-13)
 
 - `gaps` and the digest report delivery numbers for each repo on its own, never ranked: median PR open-to-merge time, the date the default branch went red (also at the top of the digest), days since the last release with the commits since, the share of releases followed by a patch release within 3 days, and flaky checks (failed, then passed on the same commit). A stale-branches row lists branches untouched for 90 days (`stale_branch_days`) with no open PR, bot branches excluded; nothing is deleted.
