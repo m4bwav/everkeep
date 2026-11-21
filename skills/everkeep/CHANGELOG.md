@@ -4,6 +4,11 @@ Every change to [SKILL.md](SKILL.md) and its companions, newest first, each with
 
 Entry shape: `### C-YYYYMMDD-n · date · one-line summary`, then `because:` (IDs or "user request"), `files:` (file and section), and a sentence on what changed. Cite section headings, not line numbers.
 
+### C-20261121-1 · 2026-11-21 · Release notes announcing a breaking change escalate a bump below major
+- because: Nygard, Release It! 2nd ed., ch. 14 "Nonbreaking API Changes" (removing guaranteed output or rejecting input that worked breaks callers whatever the version number says)
+- files: scripts/everkeep/classify.py (parse_bot `breaking_note`, escalate), references/prs.md (escalate row), tests/test_classify.py
+- A bot PR whose body carries a `BREAKING CHANGE` footer or a "Breaking changes" heading (markdown, bold or the HTML Dependabot quotes notes in) escalates even when the version moves only a minor or patch step. Loose prose ("fixes a breaking bug") does not count.
+
 ### C-20261113-1 · 2026-11-13 · Delivery numbers, red default branch, flaky checks and stale branches
 - because: R-20261113-1
 - files: scripts/everkeep/delivery.py (new), gaps.py, report.py, cli.py, providers/base.py, github.py, fake.py, references/gaps.md (Delivery numbers), SKILL.md (Step 5), tests/test_delivery.py
