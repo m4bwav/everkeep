@@ -59,6 +59,15 @@ class Pure(unittest.TestCase):
         b = C.parse_bot("dependabot[bot]", "dependabot/npm_and_yarn/x", "", "Updates `evil<script>name` from 1.0.0 to 1.0.1", [])
         self.assertEqual(b["updates"][0]["package"], "evilscriptname")
 
+    def test_breaking_note_needs_a_footer_or_heading(self):
+        def note(body):
+            return C.parse_bot("dependabot[bot]", "dependabot/npm_and_yarn/x", "Bump x from 1.2.0 to 1.3.0", body, [])["breaking_note"]
+        self.assertTrue(note("## 1.3.0\nBREAKING CHANGE: drops Node 18"))
+        self.assertTrue(note("<blockquote>\n<h3>Breaking Changes</h3>\n<ul><li>removed foo()</li></ul>"))
+        self.assertTrue(note("### Breaking changes\n- removed foo()"))
+        self.assertFalse(note("Fixes a breaking bug in the parser"))
+        self.assertFalse(note(""))
+
     def test_humans_are_not_bots(self):
         self.assertIsNone(C.parse_bot("someone", "patch-1", "Bump x from 1 to 2", "", []))
 
@@ -200,6 +209,14 @@ class Table(EnvCase):
         f["bot"]["updates"][0]["bump"] = "major"
         f["releases"][0]["bump"] = "major"
         self.assertEqual(C.classify(f)["class"], "escalate")
+
+    def test_breaking_note_in_minor_bump_escalates(self):
+        f = self.facts("owner/npm-lib", 9)
+        self.assertEqual(C.classify(f)["class"], "merge-candidate")
+        f["bot"]["breaking_note"] = True
+        c = C.classify(f)
+        self.assertEqual(c["class"], "escalate")
+        self.assertTrue(any("breaking change in a bump below major" in r for r in c["reasons"]))
 
     def test_publisher_change_escalates(self):
         f = self.facts("owner/npm-lib", 9)

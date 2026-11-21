@@ -69,6 +69,11 @@ _UPDATES = [re.compile(r"Updates? `([^`]+)` from ([\w.+-]+) to ([\w.+-]+)"),
             re.compile(r"[Bb]ump (\S+) from ([\w.+-]+) to ([\w.+-]+)")]
 
 
+# Release notes announcing a break: a Conventional Commits footer or a "Breaking changes" heading (markdown, bold,
+# or the HTML Dependabot quotes notes in). Loose prose ("fixes a breaking bug") is not enough.
+_BREAKING_NOTE = re.compile(r"BREAKING[ -]CHANGES?|(?im:^\s*(?:>\s*)?(?:#+|\*\*|<h\d>)\s*\W{0,3}\s*breaking changes?\b)")
+
+
 def parse_bot(author: str, head_ref: str, title: str, body: str, files: list[str]) -> dict | None:
     """Who the bot is, the ecosystem, and each update (package, from, to, bump) from Dependabot's or Renovate's text.
     The author is verified by the host; the text is still reduced to safe characters before any of it is reused."""
@@ -103,7 +108,8 @@ def parse_bot(author: str, head_ref: str, title: str, body: str, files: list[str
     if eco == "dotnet-sdk":
         for u in updates:
             u["package"] = "dotnet-sdk"
-    return {"bot": bot, "ecosystem": eco, "updates": updates, "group": len(updates) > 1 or " group " in (title or "")}
+    return {"bot": bot, "ecosystem": eco, "updates": updates, "group": len(updates) > 1 or " group " in (title or ""),
+            "breaking_note": bool(_BREAKING_NOTE.search(body or ""))}
 
 
 def is_security(labels: list[str], body: str) -> bool:
@@ -220,6 +226,8 @@ def classify(f: dict, cfg: dict | None = None) -> dict:
     for u in (bot or {}).get("updates", []):
         if u["bump"] == "major":
             esc.append(f"major bump: {u['package']} {u['from']} to {u['to']}")
+    if bot and bot.get("breaking_note") and not any(u["bump"] == "major" for u in bot.get("updates", [])):
+        esc.append("the release notes announce a breaking change in a bump below major")
     executed = [p for p in files if is_executed(p)]
     pin = f.get("pin_only") or {}
     if executed:
